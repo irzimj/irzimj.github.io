@@ -1,0 +1,707 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人动态网站</title>
+  <style>
+    /* 莫兰迪色系：酒红#8B2323、深黄#C19A6B、墨绿#2F4F4F */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #f5f0e6; font-family: "微软雅黑"; min-height: 100vh; }
+    
+    /* 左侧导航栏（10个索引栏，新增滚动功能）【关键修改】 */
+    .sidebar { 
+      width: 220px; height: 100vh; 
+      background: #2F4F4F; color: #fff; 
+      position: fixed; top: 0; left: 0;
+      padding: 20px;
+      overflow-y: auto; /* 垂直滚动：内容超出时显示滚动条 */
+      overflow-x: hidden; /* 隐藏水平滚动条 */
+      scrollbar-width: thin; /* Firefox滚动条美化 */
+      scrollbar-color: #C19A6B #3A5F5F; /* 滚动条颜色（深黄滑块+墨绿背景） */
+    }
+    /* Chrome/Edge/Safari滚动条美化【新增】 */
+    .sidebar::-webkit-scrollbar {
+      width: 6px; /* 滚动条宽度 */
+    }
+    .sidebar::-webkit-scrollbar-track {
+      background: #3A5F5F; /* 滚动条轨道颜色 */
+    }
+    .sidebar::-webkit-scrollbar-thumb {
+      background-color: #C19A6B; /* 滚动条滑块颜色（匹配莫兰迪深黄） */
+      border-radius: 3px; /* 滑块圆角 */
+    }
+
+    .sidebar h2 { 
+      color: #C19A6B; margin-bottom: 30px; 
+      text-align: center; border-bottom: 1px solid #C19A6B;
+      padding-bottom: 10px;
+    }
+    .menu-item { 
+      padding: 12px; margin: 10px 0; 
+      background: #3A5F5F; border-radius: 6px; 
+      cursor: pointer; transition: 0.3s;
+    }
+    .menu-item:hover { background: #8B2323; }
+    .menu-item.active { background: #8B2323; }
+    .back-btn {
+      margin-top: 20px; padding: 10px;
+      background: #C19A6B; color: #fff;
+      border: none; border-radius: 6px;
+      cursor: pointer; width: 100%;
+      margin-bottom: 10px; /* 新增：避免按钮贴滚动条 */
+    }
+
+    /* 主内容区 */
+    .main { 
+      margin-left: 220px; padding: 30px;
+    }
+    .header { 
+      text-align: center; margin-bottom: 40px;
+      color: #8B2323;
+    }
+    .header h1 { font-size: 2.5rem; margin-bottom: 10px; }
+    .header p { color: #2F4F4F; font-size: 1.1rem; }
+
+    /* 通用卡片样式 */
+    .card { 
+      background: #fff; padding: 25px; 
+      border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+    .card h3 { 
+      color: #8B2323; margin-bottom: 20px;
+      border-left: 4px solid #C19A6B; padding-left: 10px;
+    }
+    textarea { 
+      width: 100%; height: 120px; padding: 12px;
+      border: 1px solid #C19A6B; border-radius: 6px;
+      margin-bottom: 15px; resize: vertical;
+    }
+    .input-group { margin-bottom: 15px; }
+    .input-group input { 
+      width: 100%; padding: 10px;
+      border: 1px solid #C19A6B; border-radius: 6px;
+    }
+    .btn { 
+      padding: 10px 20px; border: none; 
+      border-radius: 6px; cursor: pointer;
+      margin-right: 10px;
+    }
+    .btn-primary { background: #8B2323; color: #fff; }
+    .btn-secondary { background: #C19A6B; color: #fff; }
+    .btn-danger { background: #dc3545; color: #fff; }
+
+    /* 动态/文章/评论列表 */
+    .list-item { 
+      padding: 20px; border-bottom: 1px solid #eee;
+      margin-bottom: 15px;
+    }
+    .list-item:last-child { border-bottom: none; }
+    .list-item .meta { 
+      color: #666; font-size: 0.9rem;
+      margin-bottom: 10px;
+    }
+    .list-item .content { line-height: 1.6; color: #333; }
+    .action-btn { margin-top: 10px; }
+
+    /* 密码输入框 */
+    .password-input { margin: 10px 0; }
+    /* 隐藏元素 */
+    .hidden { display: none; }
+
+    /* 全局平滑滚动【新增：可选，让滚动更丝滑】 */
+    html {
+      scroll-behavior: smooth;
+    }
+  </style>
+</head>
+<body>
+  <!-- 左侧导航栏（10个索引栏+首页） -->
+  <div class="sidebar">
+    <h2>WOW</h2>
+    <div class="menu-item active" data-id="home">首页</div>
+    <div class="menu-item" data-id="1">杠十细胞</div>
+    <div class="menu-item" data-id="2">清风</div>
+    <div class="menu-item" data-id="3">过往云烟</div>
+    <div class="menu-item" data-id="4">星月夜</div>
+    <div class="menu-item" data-id="5">竞选CCF主席</div>
+    <div class="menu-item" data-id="6">鼻子</div>
+    <div class="menu-item" data-id="7">金牌教练之死</div>
+    <div class="menu-item" data-id="8">索引栏8</div>
+    <div class="menu-item" data-id="9">索引栏9</div>
+    <div class="menu-item" data-id="10">索引栏10</div>
+    <button class="back-btn hidden" id="backBtn">返回</button>
+  </div>
+
+  <!-- 主内容区 -->
+  <div class="main">
+    <!-- 首页（发布动态） -->
+    <div id="homePage" class="page">
+      <div class="header">
+        <h1>SAR暗网</h1>
+        <p>最近一次更新:2025/12/10</p>
+      </div>
+
+      <!-- 发布动态 -->
+      <div class="card">
+        <h3>interesting</h3>
+        <textarea id="dynamicContent" placeholder="..."></textarea>
+        <div class="password-input">
+          <input type="password" id="dynamicPassword" placeholder="输入密码">
+        </div>
+        <button class="btn btn-primary" id="publishDynamicBtn">发布</button>
+        <div id="dynamicMsg" style="margin-top: 10px; color: #8B2323;"></div>
+      </div>
+
+      <!-- 动态列表 -->
+      <div class="card">
+        <h3>好玩的</h3>
+        <div id="dynamicList"></div>
+      </div>
+    </div>
+
+    <!-- 文章页面（10个索引栏共用） -->
+    <div id="articlePage" class="page hidden">
+      <div class="header">
+        <h1 id="articleTitle">杠十细胞</h1>
+      </div>
+
+      <!-- 发布/编辑文章 -->
+      <div class="card">
+        <h3>发布</h3>
+        <textarea id="articleContent" placeholder="..."></textarea>
+        <div class="password-input">
+          <input type="password" id="articlePassword" placeholder="密码">
+        </div>
+        <button class="btn btn-primary" id="publishArticleBtn">保存</button>
+        <div id="articleMsg" style="margin-top: 10px; color: #8B2323;"></div>
+      </div>
+
+      <!-- 文章内容展示 -->
+      <div class="card" id="articleContentDisplay"></div>
+
+      <!-- 文章评论区 -->
+      <div class="card">
+        <h3>评论区</h3>
+        <div class="input-group">
+          <input type="text" id="articleCommentNickname" placeholder="输入文曲星大名">
+        </div>
+        <textarea id="articleCommentContent" placeholder="天青色等烟雨，评论区等你..."></textarea>
+        <div class="password-input">
+          <input type="password" id="articleCommentPassword" placeholder="密码">
+        </div>
+        <button class="btn btn-primary" id="publishArticleCommentBtn">发布</button>
+        <div id="articleCommentMsg" style="margin-top: 10px; color: #8B2323;"></div>
+        <div id="articleCommentList" style="margin-top: 20px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 引入LeanCloud JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.17.0/dist/av-min.js"></script>
+  <script>
+    // ===================== 替换为你的LeanCloud信息 =====================
+    const APP_ID = "Q21VZoZKN2avZM9vwmcBAF6W-MdYXbMMI"; // 你的App ID
+    const APP_KEY = "CFQrfORUFrboNxT9Xc5SHriw"; // 你的App Key
+    const SERVER_URL = "https://q21vzozk.api.lncldglobal.com"; // 你的服务器地址
+    // ==================================================================
+
+    // 初始化LeanCloud
+    AV.init({
+      appId: APP_ID,
+      appKey: APP_KEY,
+      serverURL: SERVER_URL
+    });
+
+    // 定义数据表（LeanCloud自动创建，无需手动建表）
+    const Dynamic = AV.Object.extend('Dynamic'); // 动态表
+    const Article = AV.Object.extend('Article'); // 文章表
+    const Comment = AV.Object.extend('Comment'); // 评论表
+    const PASSWORD_PUBLISH = "xzr110101100";
+    const PASSWORD_PROTECT = "Czmxzr20091228"; 
+
+    let currentArticleId = 1; // 当前选中的索引栏ID
+
+    // 页面初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      // 加载首页动态
+      loadDynamics();
+
+      // 导航栏点击事件
+      document.querySelectorAll('.menu-item').forEach(item => {
+        item.addEventListener('click', () => {
+          document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+          item.classList.add('active');
+          const id = item.dataset.id;
+          if (id === 'home') {
+            // 切换到首页
+            document.getElementById('homePage').classList.remove('hidden');
+            document.getElementById('articlePage').classList.add('hidden');
+            document.getElementById('backBtn').classList.add('hidden');
+          } else {
+            // 切换到文章页面
+            currentArticleId = id;
+            document.getElementById('homePage').classList.add('hidden');
+            document.getElementById('articlePage').classList.remove('hidden');
+            document.getElementById('articleTitle').textContent = `索引栏${id}`;
+            document.getElementById('backBtn').classList.remove('hidden');
+            // 加载文章内容
+            loadArticle(id);
+            // 加载文章评论
+            loadComments('article', id);
+          }
+        });
+      });
+
+      // 返回主界面按钮
+      document.getElementById('backBtn').addEventListener('click', () => {
+        document.querySelector('.menu-item[data-id="home"]').click();
+      });
+
+      // 绑定按钮事件
+      document.getElementById('publishDynamicBtn').addEventListener('click', publishDynamic);
+      document.getElementById('publishArticleBtn').addEventListener('click', publishArticle);
+      document.getElementById('publishArticleCommentBtn').addEventListener('click', () => {
+        publishComment('article', currentArticleId);
+      });
+    });
+
+    // ------------------------ 动态相关功能 ------------------------
+    // 加载所有动态
+    async function loadDynamics() {
+      try {
+        const query = new AV.Query(Dynamic);
+        query.descending('createdAt'); // 按发布时间倒序
+        const dynamics = await query.find();
+        
+        const listEl = document.getElementById('dynamicList');
+        listEl.innerHTML = '';
+        if (dynamics.length === 0) {
+          listEl.innerHTML = '<p>暂无动态</p>';
+          return;
+        }
+
+        dynamics.forEach(dynamic => {
+          const dynamicData = dynamic.toJSON();
+          const item = document.createElement('div');
+          item.className = 'list-item';
+          item.innerHTML = `
+            <div class="meta">发布时间：${formatTime(dynamicData.createdAt)}</div>
+            <div class="content">${dynamicData.content}</div>
+            <div class="action-btn">
+              <button class="btn btn-secondary" onclick="loadComments('dynamic', '${dynamic.id}', this)">查看评论</button>
+              <button class="btn btn-${dynamicData.isProtected ? 'secondary' : 'danger'}" onclick="toggleProtect('dynamic', '${dynamic.id}', ${dynamicData.isProtected || false})">
+                ${dynamicData.isProtected ? '取消保护' : '保护'}
+              </button>
+              ${!dynamicData.isProtected ? `<button class="btn btn-danger" onclick="deleteDynamic('${dynamic.id}')">删除</button>` : ''}
+            </div>
+            <div class="comment-area hidden" id="comment-dynamic-${dynamic.id}" style="margin-top: 20px;">
+              <div class="input-group">
+                <input type="text" class="comment-nickname" placeholder="请输入昵称">
+              </div>
+              <textarea class="comment-content" placeholder="请输入评论内容..."></textarea>
+              <div class="password-input">
+                <input type="password" class="comment-password" placeholder="请输入评论密码（xzr110101100）">
+              </div>
+              <button class="btn btn-primary" onclick="publishComment('dynamic', '${dynamic.id}', this)">发布评论</button>
+              <div class="comment-list" id="comment-list-dynamic-${dynamic.id}"></div>
+            </div>
+          `;
+          listEl.appendChild(item);
+        });
+      } catch (err) {
+        console.error('加载动态失败：', err);
+        document.getElementById('dynamicList').innerHTML = '<p>加载失败，请检查LeanCloud配置</p>';
+      }
+    }
+
+    // 发布动态
+    async function publishDynamic() {
+      const content = document.getElementById('dynamicContent').value.trim();
+      const password = document.getElementById('dynamicPassword').value.trim();
+      const msgEl = document.getElementById('dynamicMsg');
+
+      // 校验
+      if (!content) {
+        msgEl.textContent = '没货啊';
+        return;
+      }
+      if (password !== PASSWORD_PUBLISH) {
+        msgEl.textContent = '乐子';
+        return;
+      }
+
+      try {
+        // 创建动态数据
+        const dynamic = new Dynamic();
+        dynamic.set('content', content);
+        dynamic.set('isProtected', false); // 默认未保护
+        await dynamic.save(); // 保存到LeanCloud
+
+        // 提示并刷新
+        msgEl.textContent = '嘿嘿';
+        document.getElementById('dynamicContent').value = '';
+        document.getElementById('dynamicPassword').value = '';
+        loadDynamics(); // 重新加载动态列表
+      } catch (err) {
+        console.error('发布动态失败：', err);
+        msgEl.textContent = '发布失败，请重试！';
+      }
+    }
+
+    // 删除动态（需密码+未保护）
+    async function deleteDynamic(dynamicId) {
+      if (!confirm('若是精华，建议勿删')) return;
+      const password = prompt('密码');
+      if (password !== PASSWORD_PUBLISH) {
+        alert('乐子');
+        return;
+      }
+
+      try {
+        // 查询动态是否被保护
+        const query = new AV.Query(Dynamic);
+        const dynamic = await query.get(dynamicId);
+        if (dynamic.get('isProtected')) {
+          alert('你不配');
+          return;
+        }
+
+        // 删除动态
+        await dynamic.destroy();
+        // 同时删除关联评论
+        const commentQuery = new AV.Query(Comment);
+        commentQuery.equalTo('targetType', 'dynamic');
+        commentQuery.equalTo('targetId', dynamicId);
+        const comments = await commentQuery.find();
+        await AV.Object.destroyAll(comments);
+
+        // 刷新列表
+        alert('动态删除成功！');
+        loadDynamics();
+      } catch (err) {
+        console.error('删除动态失败：', err);
+        alert('删除失败，请重试！');
+      }
+    }
+
+    // ------------------------ 文章相关功能 ------------------------
+    // 加载单篇文章（索引栏ID=1~10）
+    async function loadArticle(indexId) {
+      try {
+        const query = new AV.Query(Article);
+        query.equalTo('indexId', Number(indexId)); // 索引栏ID（数字类型）
+        const articles = await query.find();
+        
+        const contentEl = document.getElementById('articleContent');
+        const displayEl = document.getElementById('articleContentDisplay');
+
+        if (articles.length > 0) {
+          // 有文章，显示内容
+          const article = articles[0];
+          const articleData = article.toJSON();
+          contentEl.value = articleData.content;
+          displayEl.innerHTML = `
+            <div class="list-item">
+              <div class="meta">最后更新：${formatTime(articleData.updatedAt)}</div>
+              <div class="content">${articleData.content}</div>
+              <div class="action-btn">
+                <button class="btn btn-${articleData.isProtected ? 'secondary' : 'danger'}" onclick="toggleProtect('article', '${article.id}', ${articleData.isProtected || false})">
+                  ${articleData.isProtected ? '取消保护' : '保护'}
+                </button>
+                ${!articleData.isProtected ? `<button class="btn btn-danger" onclick="deleteArticle('${article.id}', ${indexId})">删除</button>` : ''}
+              </div>
+            </div>
+          `;
+        } else {
+          // 无文章，提示输入
+          contentEl.value = '';
+          displayEl.innerHTML = '<p>...</p>';
+        }
+      } catch (err) {
+        console.error('加载文章失败：', err);
+        document.getElementById('articleContentDisplay').innerHTML = '<p>加载失败，请检查LeanCloud配置</p>';
+      }
+    }
+
+    // 发布/编辑文章
+    async function publishArticle() {
+      const content = document.getElementById('articleContent').value.trim();
+      const password = document.getElementById('articlePassword').value.trim();
+      const msgEl = document.getElementById('articleMsg');
+
+      // 校验
+      if (!content) {
+        msgEl.textContent = '虚了？';
+        return;
+      }
+      if (password !== PASSWORD_PUBLISH) {
+        msgEl.textContent = '乐子';
+        return;
+      }
+
+      try {
+        // 查询该索引栏是否已有文章
+        const query = new AV.Query(Article);
+        query.equalTo('indexId', Number(currentArticleId));
+        const articles = await query.find();
+
+        let article;
+        if (articles.length > 0) {
+          // 有文章，更新
+          article = articles[0];
+          article.set('content', content);
+        } else {
+          // 无文章，新建
+          article = new Article();
+          article.set('indexId', Number(currentArticleId));
+          article.set('content', content);
+          article.set('isProtected', false); // 默认未保护
+        }
+        await article.save(); // 保存到LeanCloud
+
+        // 提示并刷新
+        msgEl.textContent = '文章保存成功！';
+        loadArticle(currentArticleId); // 重新加载文章
+      } catch (err) {
+        console.error('保存文章失败：', err);
+        msgEl.textContent = '保存失败，请重试！';
+      }
+    }
+
+    // 删除文章（需密码+未保护）
+    async function deleteArticle(articleId, indexId) {
+      if (!confirm('手滑了吗')) return;
+      const password = prompt('密码');
+      if (password !== PASSWORD_PUBLISH) {
+        alert('乐子');
+        return;
+      }
+
+      try {
+        // 查询文章是否被保护
+        const query = new AV.Query(Article);
+        const article = await query.get(articleId);
+        if (article.get('isProtected')) {
+          alert('该文章已被保护，无法删除！');
+          return;
+        }
+
+        // 删除文章
+        await article.destroy();
+        // 同时删除关联评论
+        const commentQuery = new AV.Query(Comment);
+        commentQuery.equalTo('targetType', 'article');
+        commentQuery.equalTo('targetId', String(indexId));
+        const comments = await commentQuery.find();
+        await AV.Object.destroyAll(comments);
+
+        // 刷新列表
+        alert('文章删除成功！');
+        loadArticle(indexId);
+      } catch (err) {
+        console.error('删除文章失败：', err);
+        alert('删除失败，请重试！');
+      }
+    }
+
+    // ------------------------ 评论相关功能 ------------------------
+    // 加载评论（支持动态/文章评论）
+    async function loadComments(targetType, targetId, btnEl) {
+      // 切换评论区显示/隐藏（仅动态评论需要）
+      if (btnEl) {
+        const commentArea = btnEl.parentElement.querySelector(`#comment-${targetType}-${targetId}`);
+        commentArea.classList.toggle('hidden');
+        if (commentArea.classList.contains('hidden')) return; // 隐藏则不加载
+      }
+
+      try {
+        const query = new AV.Query(Comment);
+        query.equalTo('targetType', targetType);
+        query.equalTo('targetId', String(targetId));
+        query.descending('createdAt'); // 按发布时间倒序
+        const comments = await query.find();
+        
+        // 找到评论列表容器
+        const listEl = btnEl 
+          ? btnEl.parentElement.querySelector('.comment-list') 
+          : document.getElementById('articleCommentList');
+        
+        listEl.innerHTML = '';
+        if (comments.length === 0) {
+          listEl.innerHTML = '<p>快来抢沙发！</p>';
+          return;
+        }
+
+        // 渲染评论列表
+        comments.forEach(comment => {
+          const commentData = comment.toJSON();
+          listEl.innerHTML += `
+            <div class="list-item">
+              <div class="meta">${commentData.nickname} · ${formatTime(commentData.createdAt)}</div>
+              <div class="content">${commentData.content}</div>
+              <div class="action-btn">
+                <button class="btn btn-${commentData.isProtected ? 'secondary' : 'danger'}" onclick="toggleProtect('comment', '${comment.id}', ${commentData.isProtected || false})">
+                  ${commentData.isProtected ? '取消保护' : '保护'}
+                </button>
+                ${!commentData.isProtected ? `<button class="btn btn-danger" onclick="deleteComment('${comment.id}', '${targetType}', '${targetId}')">删除</button>` : ''}
+              </div>
+            </div>
+          `;
+        });
+      } catch (err) {
+        console.error('加载评论失败：', err);
+        listEl.innerHTML = '<p>加载失败，请重试！</p>';
+      }
+    }
+
+    // 发布评论
+    async function publishComment(targetType, targetId, btnEl) {
+      // 获取输入内容（区分动态/文章评论）
+      let nickname, content, password;
+      if (targetType === 'dynamic') {
+        const commentArea = document.getElementById(`comment-${targetType}-${targetId}`) || btnEl.parentElement;
+        nickname = commentArea.querySelector('.comment-nickname').value.trim();
+        content = commentArea.querySelector('.comment-content').value.trim();
+        password = commentArea.querySelector('.comment-password').value.trim();
+      } else {
+        nickname = document.getElementById('articleCommentNickname').value.trim();
+        content = document.getElementById('articleCommentContent').value.trim();
+        password = document.getElementById('articleCommentPassword').value.trim();
+      }
+
+      // 校验
+      if (!nickname || !content) {
+        alert('虚了？');
+        return;
+      }
+      if (password !== PASSWORD_PUBLISH) {
+        alert('乐子');
+        return;
+      }
+
+      try {
+        // 创建评论数据
+        const comment = new Comment();
+        comment.set('targetType', targetType); // dynamic/article
+        comment.set('targetId', String(targetId)); // 关联的动态/文章ID
+        comment.set('nickname', nickname);
+        comment.set('content', content);
+        comment.set('isProtected', false); // 默认未保护
+        await comment.save(); // 保存到LeanCloud
+
+        // 提示并刷新
+        alert('评论发布成功！');
+        // 清空输入框
+        if (targetType === 'dynamic') {
+          commentArea.querySelector('.comment-nickname').value = '';
+          commentArea.querySelector('.comment-content').value = '';
+          commentArea.querySelector('.comment-password').value = '';
+        } else {
+          document.getElementById('articleCommentNickname').value = '';
+          document.getElementById('articleCommentContent').value = '';
+          document.getElementById('articleCommentPassword').value = '';
+        }
+        // 重新加载评论
+        loadComments(targetType, targetId, btnEl);
+      } catch (err) {
+        console.error('发布评论失败：', err);
+        alert('发布失败，请重试！');
+      }
+    }
+
+    // 删除评论（需密码+未保护）
+    async function deleteComment(commentId, targetType, targetId) {
+      if (!confirm('是吗')) return;
+      const password = prompt('密码');
+      if (password !== PASSWORD_PUBLISH) {
+        alert('密码错误！');
+        return;
+      }
+
+      try {
+        // 查询评论是否被保护
+        const query = new AV.Query(Comment);
+        const comment = await query.get(commentId);
+        if (comment.get('isProtected')) {
+          alert('略略略~');
+          return;
+        }
+
+        // 删除评论
+        await comment.destroy();
+        alert('评论删除成功！');
+        // 重新加载评论
+        if (targetType === 'article') {
+          loadComments('article', targetId);
+        } else {
+          loadDynamics(); // 动态评论刷新整个动态列表
+        }
+      } catch (err) {
+        console.error('删除评论失败：', err);
+        alert('删除失败，请重试！');
+      }
+    }
+
+    // ------------------------ 保护/取消保护功能 ------------------------
+    async function toggleProtect(type, id, isProtectedNow) {
+      const newStatus = !isProtectedNow; // 切换保护状态
+      const password = prompt(`请输入${newStatus ? '保护' : '取消保护'}密码`);
+      if (password !== PASSWORD_PROTECT) {
+        alert('乐子');
+        return;
+      }
+
+      try {
+        // 根据类型查询对应数据
+        let query, obj;
+        switch (type) {
+          case 'dynamic':
+            query = new AV.Query(Dynamic);
+            break;
+          case 'article':
+            query = new AV.Query(Article);
+            break;
+          case 'comment':
+            query = new AV.Query(Comment);
+            break;
+          default:
+            alert('类型错误！');
+            return;
+        }
+        obj = await query.get(id);
+        obj.set('isProtected', newStatus);
+        await obj.save(); // 保存状态
+
+        // 提示并刷新
+        alert(`${newStatus ? '保护' : '取消保护'}成功！`);
+        if (type === 'dynamic') loadDynamics();
+        else if (type === 'article') loadArticle(currentArticleId);
+        else {
+          loadDynamics();
+          loadComments('article', currentArticleId);
+        }
+      } catch (err) {
+        console.error('保护操作失败：', err);
+        alert('操作失败，请重试！');
+      }
+    }
+
+    // ------------------------ 工具函数 ------------------------
+    // 格式化时间
+    function formatTime(timeStr) {
+      if (!timeStr) return '';
+      const date = new Date(timeStr);
+      return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    }
+  </script>
+</body>
+</html>
