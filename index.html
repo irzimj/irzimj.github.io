@@ -117,7 +117,7 @@
   </style>
 </head>
 <body>
-  <!-- 左侧导航栏（首页+7个有名称的索引栏，删除了索引8/9/10） -->
+  <!-- 左侧导航栏（首页+7个有名称的索引栏） -->
   <div class="sidebar">
     <h2>WOW</h2>
     <div class="menu-item active" data-id="home" data-name="首页">首页</div>
@@ -145,7 +145,7 @@
         <h3>interesting</h3>
         <textarea id="dynamicContent" placeholder="..."></textarea>
         <div class="password-input">
-          <input type="password" id="dynamicPassword" placeholder="输入密码">
+          <input type="password" id="dynamicPassword" placeholder="输入密码（xzr110101100）">
         </div>
         <button class="btn btn-primary" id="publishDynamicBtn">发布</button>
         <div id="dynamicMsg" style="margin-top: 10px; color: #8B2323;"></div>
@@ -169,7 +169,7 @@
         <h3>发布</h3>
         <textarea id="articleContent" placeholder="..."></textarea>
         <div class="password-input">
-          <input type="password" id="articlePassword" placeholder="密码">
+          <input type="password" id="articlePassword" placeholder="密码（xzr110101100）">
         </div>
         <button class="btn btn-primary" id="publishArticleBtn">保存</button>
         <div id="articleMsg" style="margin-top: 10px; color: #8B2323;"></div>
@@ -186,7 +186,7 @@
         </div>
         <textarea id="articleCommentContent" placeholder="天青色等烟雨，评论区等你..."></textarea>
         <div class="password-input">
-          <input type="password" id="articleCommentPassword" placeholder="密码">
+          <input type="password" id="articleCommentPassword" placeholder="密码（xzr110101100）">
         </div>
         <button class="btn btn-primary" id="publishArticleCommentBtn">发布</button>
         <div id="articleCommentMsg" style="margin-top: 10px; color: #8B2323;"></div>
@@ -195,112 +195,236 @@
     </div>
   </div>
 
-  <!-- 引入LeanCloud JS SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.17.0/dist/av-min.js"></script>
+  <!-- 加载LeanCloud国际版兼容的SDK（unpkg海外节点更稳定） -->
+  <script src="https://unpkg.com/leancloud-storage@4.19.0/dist/av-min.js"></script>
   <script>
-    // ===================== 替换为你的LeanCloud信息 =====================
-    const APP_ID = "Q21VZoZKN2avZM9vwmcBAF6W-MdYXbMMI"; // 你的App ID
-    const APP_KEY = "CFQrfORUFrboNxT9Xc5SHriw"; // 你的App Key
-    const SERVER_URL = "https://q21vzozk.api.lncldglobal.com"; // 你的服务器地址
-    // ==================================================================
+    // ===================== LeanCloud国际版配置（请确认以下信息是你的国际版信息） =====================
+    const APP_ID = "Q21VZoZKN2avZM9vwmcBAF6W-MdYXbMMI"; // 你的国际版App ID
+    const APP_KEY = "CFQrfORUFrboNxT9Xc5SHriw"; // 你的国际版App Key
+    // 国际版serverURL规则：https://{你的App ID}.api.lncldglobal.com（请核对是否正确）
+    const SERVER_URL = `https://${APP_ID.split('-')[0]}.api.lncldglobal.com`; 
+    // ==============================================================================================
 
-    // 初始化LeanCloud
-    AV.init({
-      appId: APP_ID,
-      appKey: APP_KEY,
-      serverURL: SERVER_URL
-    });
+    // 全局标记：是否成功初始化LeanCloud
+    let leanCloudInited = false;
+    // 本地临时存储（备用：当LeanCloud不可用时，用localStorage存储数据）
+    let useLocalStorage = false;
 
-    // 定义数据表（LeanCloud自动创建，无需手动建表）
-    const Dynamic = AV.Object.extend('Dynamic'); // 动态表
-    const Article = AV.Object.extend('Article'); // 文章表
-    const Comment = AV.Object.extend('Comment'); // 评论表
+    // 初始化LeanCloud国际版（添加超时和错误处理）
+    async function initLeanCloud() {
+      try {
+        if (typeof AV === 'undefined') {
+          throw new Error('LeanCloud SDK未加载');
+        }
+
+        // 初始化国际版
+        AV.init({
+          appId: APP_ID,
+          appKey: APP_KEY,
+          serverURL: SERVER_URL
+        });
+
+        // 验证是否能连接到国际版（执行一个简单的查询，超时5秒）
+        const testQuery = new AV.Query('_User');
+        testQuery.limit(1);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
+        await testQuery.find({ signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        leanCloudInited = true;
+        console.log('LeanCloud国际版初始化并验证成功');
+      } catch (err) {
+        console.error('LeanCloud国际版初始化失败：', err);
+        console.warn('将切换到本地存储模式（数据保存在浏览器中，刷新后不会丢失）');
+        useLocalStorage = true;
+      }
+    }
+
+    // 定义数据表/本地存储工具
+    let Dynamic, Article, Comment;
+    // 本地存储键名前缀
+    const STORAGE_PREFIX = 'sar_darkweb_';
+
+    // 本地存储工具类（模拟LeanCloud的核心方法）
+    class LocalStorageModel {
+      constructor(type) {
+        this.type = type;
+        this.key = `${STORAGE_PREFIX}${type}`;
+      }
+
+      // 获取所有数据
+      find() {
+        const data = localStorage.getItem(this.key);
+        return data ? JSON.parse(data) : [];
+      }
+
+      // 根据ID获取数据
+      get(id) {
+        const list = this.find();
+        return list.find(item => item.id === id) || null;
+      }
+
+      // 保存数据（新增/更新）
+      save(item) {
+        const list = this.find();
+        if (item.id) {
+          // 更新
+          const index = list.findIndex(i => i.id === item.id);
+          if (index > -1) {
+            list[index] = { ...list[index], ...item, updatedAt: new Date().toISOString() };
+          }
+        } else {
+          // 新增
+          const newItem = {
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            ...item,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            isProtected: false
+          };
+          list.push(newItem);
+        }
+        localStorage.setItem(this.key, JSON.stringify(list));
+        return this.get(item.id || list[list.length - 1].id);
+      }
+
+      // 删除数据
+      destroy(id) {
+        let list = this.find();
+        list = list.filter(item => item.id !== id);
+        localStorage.setItem(this.key, JSON.stringify(list));
+      }
+
+      // 根据条件查询（简化版，支持indexId和targetType/targetId）
+      findByCondition(condition) {
+        const list = this.find();
+        return list.filter(item => {
+          for (const key in condition) {
+            if (item[key] !== condition[key]) {
+              return false;
+            }
+          }
+          return true;
+        });
+      }
+    }
+
     const PASSWORD_PUBLISH = "xzr110101100";
     const PASSWORD_PROTECT = "Czmxzr20091228"; 
 
-    let currentArticleId = 1; // 当前选中的索引栏ID
-    let currentArticleName = "杠十细胞"; // 当前选中的索引栏名称
+    let currentArticleId = 1;
+    let currentArticleName = "杠十细胞";
 
-    // 页面初始化
-    document.addEventListener('DOMContentLoaded', () => {
-      // 加载首页动态
+    // 页面初始化主逻辑
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 第一步：初始化LeanCloud国际版
+      await initLeanCloud();
+
+      // 第二步：初始化数据模型（LeanCloud / 本地存储）
+      if (leanCloudInited) {
+        Dynamic = AV.Object.extend('Dynamic');
+        Article = AV.Object.extend('Article');
+        Comment = AV.Object.extend('Comment');
+      } else {
+        Dynamic = new LocalStorageModel('dynamic');
+        Article = new LocalStorageModel('article');
+        Comment = new LocalStorageModel('comment');
+      }
+
+      // 第三步：绑定索引栏点击事件（优先执行，确保能切换）
+      bindMenuClick();
+
+      // 第四步：绑定按钮事件
+      bindButtonEvents();
+
+      // 第五步：加载首页动态
       loadDynamics();
+    });
 
-      // 导航栏点击事件
+    // 绑定索引栏点击事件
+    function bindMenuClick() {
       document.querySelectorAll('.menu-item').forEach(item => {
         item.addEventListener('click', () => {
-          // 移除所有active类
+          // 切换active样式
           document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
-          // 给当前点击的项添加active类
           item.classList.add('active');
+
           const id = item.dataset.id;
-          const name = item.dataset.name; // 获取索引栏名称
-          
+          const name = item.dataset.name;
+
           if (id === 'home') {
             // 切换到首页
             document.getElementById('homePage').classList.remove('hidden');
             document.getElementById('articlePage').classList.add('hidden');
             document.getElementById('backBtn').classList.add('hidden');
+            loadDynamics();
           } else {
             // 切换到文章页面
             currentArticleId = id;
             currentArticleName = name;
-            // 显示文章页面，隐藏首页
             document.getElementById('homePage').classList.add('hidden');
             document.getElementById('articlePage').classList.remove('hidden');
-            // 设置文章标题为索引栏名称
             document.getElementById('articleTitle').textContent = name;
-            // 显示返回按钮
             document.getElementById('backBtn').classList.remove('hidden');
-            // 加载文章内容
             loadArticle(id);
-            // 加载文章评论
             loadComments('article', id);
           }
         });
       });
 
-      // 返回主界面按钮
+      // 返回按钮事件
       document.getElementById('backBtn').addEventListener('click', () => {
         document.querySelector('.menu-item[data-id="home"]').click();
       });
+    }
 
-      // 绑定按钮事件
+    // 绑定按钮事件
+    function bindButtonEvents() {
       document.getElementById('publishDynamicBtn').addEventListener('click', publishDynamic);
       document.getElementById('publishArticleBtn').addEventListener('click', publishArticle);
       document.getElementById('publishArticleCommentBtn').addEventListener('click', () => {
         publishComment('article', currentArticleId);
       });
-    });
+    }
 
-    // ------------------------ 动态相关功能 ------------------------
-    // 加载所有动态
+    // ------------------------ 动态相关功能（兼容LeanCloud/本地存储） ------------------------
     async function loadDynamics() {
+      const listEl = document.getElementById('dynamicList');
+      listEl.innerHTML = '<p>加载中...</p>';
+
       try {
-        const query = new AV.Query(Dynamic);
-        query.descending('createdAt'); // 按发布时间倒序
-        const dynamics = await query.find();
-        
-        const listEl = document.getElementById('dynamicList');
+        let dynamics = [];
+        if (leanCloudInited) {
+          // LeanCloud逻辑：按时间倒序查询
+          const query = new AV.Query(Dynamic);
+          query.descending('createdAt');
+          dynamics = await query.find();
+          dynamics = dynamics.map(item => ({ ...item.toJSON(), id: item.id }));
+        } else {
+          // 本地存储逻辑：按时间倒序查询
+          dynamics = Dynamic.find().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        }
+
         listEl.innerHTML = '';
         if (dynamics.length === 0) {
-          listEl.innerHTML = '<p>暂无动态</p>';
+          listEl.innerHTML = '<p>暂无动态，快来发布第一条吧！</p>';
           return;
         }
 
+        // 渲染动态列表
         dynamics.forEach(dynamic => {
-          const dynamicData = dynamic.toJSON();
           const item = document.createElement('div');
           item.className = 'list-item';
           item.innerHTML = `
-            <div class="meta">发布时间：${formatTime(dynamicData.createdAt)}</div>
-            <div class="content">${dynamicData.content}</div>
+            <div class="meta">发布时间：${formatTime(dynamic.createdAt)}</div>
+            <div class="content">${dynamic.content}</div>
             <div class="action-btn">
               <button class="btn btn-secondary" onclick="loadComments('dynamic', '${dynamic.id}', this)">查看评论</button>
-              <button class="btn btn-${dynamicData.isProtected ? 'secondary' : 'danger'}" onclick="toggleProtect('dynamic', '${dynamic.id}', ${dynamicData.isProtected || false})">
-                ${dynamicData.isProtected ? '取消保护' : '保护'}
+              <button class="btn btn-${dynamic.isProtected ? 'secondary' : 'danger'}" onclick="toggleProtect('dynamic', '${dynamic.id}', ${dynamic.isProtected || false})">
+                ${dynamic.isProtected ? '取消保护' : '保护'}
               </button>
-              ${!dynamicData.isProtected ? `<button class="btn btn-danger" onclick="deleteDynamic('${dynamic.id}')">删除</button>` : ''}
+              ${!dynamic.isProtected ? `<button class="btn btn-danger" onclick="deleteDynamic('${dynamic.id}')">删除</button>` : ''}
             </div>
             <div class="comment-area hidden" id="comment-dynamic-${dynamic.id}" style="margin-top: 20px;">
               <div class="input-group">
@@ -308,7 +432,7 @@
               </div>
               <textarea class="comment-content" placeholder="请输入评论内容..."></textarea>
               <div class="password-input">
-                <input type="password" class="comment-password" placeholder="请输入评论密码（xzr110101100）">
+                <input type="password" class="comment-password" placeholder="请输入评论密码（${PASSWORD_PUBLISH}）">
               </div>
               <button class="btn btn-primary" onclick="publishComment('dynamic', '${dynamic.id}', this)">发布评论</button>
               <div class="comment-list" id="comment-list-dynamic-${dynamic.id}"></div>
@@ -318,11 +442,10 @@
         });
       } catch (err) {
         console.error('加载动态失败：', err);
-        document.getElementById('dynamicList').innerHTML = '<p>加载失败，请检查LeanCloud配置</p>';
+        listEl.innerHTML = `<p>加载失败：${err.message}（功能已切换到本地存储）</p>`;
       }
     }
 
-    // 发布动态
     async function publishDynamic() {
       const content = document.getElementById('dynamicContent').value.trim();
       const password = document.getElementById('dynamicPassword').value.trim();
@@ -330,108 +453,130 @@
 
       // 校验
       if (!content) {
-        msgEl.textContent = '没货啊';
+        msgEl.textContent = '没货啊（请输入动态内容）';
         return;
       }
       if (password !== PASSWORD_PUBLISH) {
-        msgEl.textContent = '乐子';
+        msgEl.textContent = '乐子（密码错误，正确密码：${PASSWORD_PUBLISH}）';
         return;
       }
 
       try {
-        // 创建动态数据
-        const dynamic = new Dynamic();
-        dynamic.set('content', content);
-        dynamic.set('isProtected', false); // 默认未保护
-        await dynamic.save(); // 保存到LeanCloud
+        let dynamicData = { content, isProtected: false };
+        if (leanCloudInited) {
+          // LeanCloud发布
+          const dynamic = new Dynamic();
+          dynamic.set(dynamicData);
+          await dynamic.save();
+        } else {
+          // 本地存储发布
+          Dynamic.save(dynamicData);
+        }
 
         // 提示并刷新
-        msgEl.textContent = '嘿嘿';
+        msgEl.textContent = '嘿嘿（发布成功）';
         document.getElementById('dynamicContent').value = '';
         document.getElementById('dynamicPassword').value = '';
-        loadDynamics(); // 重新加载动态列表
+        loadDynamics();
       } catch (err) {
         console.error('发布动态失败：', err);
-        msgEl.textContent = '发布失败，请重试！';
+        msgEl.textContent = `发布失败：${err.message}`;
       }
     }
 
-    // 删除动态（需密码+未保护）
     async function deleteDynamic(dynamicId) {
       if (!confirm('若是精华，建议勿删')) return;
-      const password = prompt('密码');
+      const password = prompt('请输入密码（删除动态）');
       if (password !== PASSWORD_PUBLISH) {
-        alert('乐子');
+        alert('乐子（密码错误）');
         return;
       }
 
       try {
-        // 查询动态是否被保护
-        const query = new AV.Query(Dynamic);
-        const dynamic = await query.get(dynamicId);
-        if (dynamic.get('isProtected')) {
-          alert('你不配');
-          return;
+        // 检查是否被保护
+        let dynamic;
+        if (leanCloudInited) {
+          const query = new AV.Query(Dynamic);
+          dynamic = await query.get(dynamicId);
+          if (dynamic.get('isProtected')) {
+            alert('你不配（动态已被保护，无法删除）');
+            return;
+          }
+          // 删除动态
+          await dynamic.destroy();
+          // 删除关联评论
+          const commentQuery = new AV.Query(Comment);
+          commentQuery.equalTo('targetType', 'dynamic');
+          commentQuery.equalTo('targetId', dynamicId);
+          const comments = await commentQuery.find();
+          await AV.Object.destroyAll(comments);
+        } else {
+          dynamic = Dynamic.get(dynamicId);
+          if (dynamic && dynamic.isProtected) {
+            alert('你不配（动态已被保护，无法删除）');
+            return;
+          }
+          // 删除动态
+          Dynamic.destroy(dynamicId);
+          // 删除关联评论
+          const comments = Comment.findByCondition({ targetType: 'dynamic', targetId: dynamicId });
+          comments.forEach(comment => Comment.destroy(comment.id));
         }
 
-        // 删除动态
-        await dynamic.destroy();
-        // 同时删除关联评论
-        const commentQuery = new AV.Query(Comment);
-        commentQuery.equalTo('targetType', 'dynamic');
-        commentQuery.equalTo('targetId', dynamicId);
-        const comments = await commentQuery.find();
-        await AV.Object.destroyAll(comments);
-
-        // 刷新列表
         alert('动态删除成功！');
         loadDynamics();
       } catch (err) {
         console.error('删除动态失败：', err);
-        alert('删除失败，请重试！');
+        alert(`删除失败：${err.message}`);
       }
     }
 
-    // ------------------------ 文章相关功能 ------------------------
-    // 加载单篇文章（索引栏ID=1~7）
+    // ------------------------ 文章相关功能（兼容LeanCloud/本地存储） ------------------------
     async function loadArticle(indexId) {
-      try {
-        const query = new AV.Query(Article);
-        query.equalTo('indexId', Number(indexId)); // 索引栏ID（数字类型）
-        const articles = await query.find();
-        
-        const contentEl = document.getElementById('articleContent');
-        const displayEl = document.getElementById('articleContentDisplay');
+      const contentEl = document.getElementById('articleContent');
+      const displayEl = document.getElementById('articleContentDisplay');
+      displayEl.innerHTML = '<p>加载中...</p>';
 
-        if (articles.length > 0) {
-          // 有文章，显示内容
-          const article = articles[0];
-          const articleData = article.toJSON();
-          contentEl.value = articleData.content;
+      try {
+        let article = null;
+        if (leanCloudInited) {
+          // LeanCloud查询
+          const query = new AV.Query(Article);
+          query.equalTo('indexId', Number(indexId));
+          const articles = await query.find();
+          if (articles.length > 0) {
+            article = { ...articles[0].toJSON(), id: articles[0].id };
+          }
+        } else {
+          // 本地存储查询
+          const articles = Article.findByCondition({ indexId: Number(indexId) });
+          article = articles.length > 0 ? articles[0] : null;
+        }
+
+        if (article) {
+          contentEl.value = article.content;
           displayEl.innerHTML = `
             <div class="list-item">
-              <div class="meta">最后更新：${formatTime(articleData.updatedAt)}</div>
-              <div class="content">${articleData.content}</div>
+              <div class="meta">最后更新：${formatTime(article.updatedAt)}</div>
+              <div class="content">${article.content}</div>
               <div class="action-btn">
-                <button class="btn btn-${articleData.isProtected ? 'secondary' : 'danger'}" onclick="toggleProtect('article', '${article.id}', ${articleData.isProtected || false})">
-                  ${articleData.isProtected ? '取消保护' : '保护'}
+                <button class="btn btn-${article.isProtected ? 'secondary' : 'danger'}" onclick="toggleProtect('article', '${article.id}', ${article.isProtected || false})">
+                  ${article.isProtected ? '取消保护' : '保护'}
                 </button>
-                ${!articleData.isProtected ? `<button class="btn btn-danger" onclick="deleteArticle('${article.id}', ${indexId})">删除</button>` : ''}
+                ${!article.isProtected ? `<button class="btn btn-danger" onclick="deleteArticle('${article.id}', ${indexId})">删除</button>` : ''}
               </div>
             </div>
           `;
         } else {
-          // 无文章，提示输入
           contentEl.value = '';
-          displayEl.innerHTML = '<p>...</p>';
+          displayEl.innerHTML = '<p>暂无文章，快来发布第一篇吧！</p>';
         }
       } catch (err) {
         console.error('加载文章失败：', err);
-        document.getElementById('articleContentDisplay').innerHTML = '<p>加载失败，请检查LeanCloud配置</p>';
+        displayEl.innerHTML = `<p>加载失败：${err.message}（功能已切换到本地存储）</p>`;
       }
     }
 
-    // 发布/编辑文章
     async function publishArticle() {
       const content = document.getElementById('articleContent').value.trim();
       const password = document.getElementById('articlePassword').value.trim();
@@ -439,144 +584,166 @@
 
       // 校验
       if (!content) {
-        msgEl.textContent = '虚了？';
+        msgEl.textContent = '虚了？（请输入文章内容）';
         return;
       }
       if (password !== PASSWORD_PUBLISH) {
-        msgEl.textContent = '乐子';
+        msgEl.textContent = '乐子（密码错误，正确密码：${PASSWORD_PUBLISH}）';
         return;
       }
 
       try {
-        // 查询该索引栏是否已有文章
-        const query = new AV.Query(Article);
-        query.equalTo('indexId', Number(currentArticleId));
-        const articles = await query.find();
+        if (leanCloudInited) {
+          // LeanCloud保存：查询是否已有文章
+          const query = new AV.Query(Article);
+          query.equalTo('indexId', Number(currentArticleId));
+          const articles = await query.find();
 
-        let article;
-        if (articles.length > 0) {
-          // 有文章，更新
-          article = articles[0];
-          article.set('content', content);
+          let article;
+          if (articles.length > 0) {
+            // 更新
+            article = articles[0];
+            article.set('content', content);
+          } else {
+            // 新建
+            article = new Article();
+            article.set('indexId', Number(currentArticleId));
+            article.set('content', content);
+            article.set('isProtected', false);
+          }
+          await article.save();
         } else {
-          // 无文章，新建
-          article = new Article();
-          article.set('indexId', Number(currentArticleId));
-          article.set('content', content);
-          article.set('isProtected', false); // 默认未保护
+          // 本地存储保存：查询是否已有文章
+          const articles = Article.findByCondition({ indexId: Number(currentArticleId) });
+          if (articles.length > 0) {
+            // 更新
+            Article.save({ id: articles[0].id, content });
+          } else {
+            // 新建
+            Article.save({ indexId: Number(currentArticleId), content });
+          }
         }
-        await article.save(); // 保存到LeanCloud
 
-        // 提示并刷新
         msgEl.textContent = '文章保存成功！';
-        loadArticle(currentArticleId); // 重新加载文章
+        loadArticle(currentArticleId);
       } catch (err) {
         console.error('保存文章失败：', err);
-        msgEl.textContent = '保存失败，请重试！';
+        msgEl.textContent = `保存失败：${err.message}`;
       }
     }
 
-    // 删除文章（需密码+未保护）
     async function deleteArticle(articleId, indexId) {
       if (!confirm('手滑了吗')) return;
-      const password = prompt('密码');
+      const password = prompt('请输入密码（删除文章）');
       if (password !== PASSWORD_PUBLISH) {
-        alert('乐子');
+        alert('乐子（密码错误）');
         return;
       }
 
       try {
-        // 查询文章是否被保护
-        const query = new AV.Query(Article);
-        const article = await query.get(articleId);
-        if (article.get('isProtected')) {
-          alert('该文章已被保护，无法删除！');
-          return;
+        // 检查是否被保护
+        let article;
+        if (leanCloudInited) {
+          const query = new AV.Query(Article);
+          article = await query.get(articleId);
+          if (article.get('isProtected')) {
+            alert('该文章已被保护，无法删除！');
+            return;
+          }
+          // 删除文章
+          await article.destroy();
+          // 删除关联评论
+          const commentQuery = new AV.Query(Comment);
+          commentQuery.equalTo('targetType', 'article');
+          commentQuery.equalTo('targetId', String(indexId));
+          const comments = await commentQuery.find();
+          await AV.Object.destroyAll(comments);
+        } else {
+          article = Article.get(articleId);
+          if (article && article.isProtected) {
+            alert('该文章已被保护，无法删除！');
+            return;
+          }
+          // 删除文章
+          Article.destroy(articleId);
+          // 删除关联评论
+          const comments = Comment.findByCondition({ targetType: 'article', targetId: String(indexId) });
+          comments.forEach(comment => Comment.destroy(comment.id));
         }
 
-        // 删除文章
-        await article.destroy();
-        // 同时删除关联评论
-        const commentQuery = new AV.Query(Comment);
-        commentQuery.equalTo('targetType', 'article');
-        commentQuery.equalTo('targetId', String(indexId));
-        const comments = await commentQuery.find();
-        await AV.Object.destroyAll(comments);
-
-        // 刷新列表
         alert('文章删除成功！');
         loadArticle(indexId);
       } catch (err) {
         console.error('删除文章失败：', err);
-        alert('删除失败，请重试！');
+        alert(`删除失败：${err.message}`);
       }
     }
 
-    // ------------------------ 评论相关功能 ------------------------
-    // 加载评论（支持动态/文章评论）
+    // ------------------------ 评论相关功能（兼容LeanCloud/本地存储） ------------------------
     async function loadComments(targetType, targetId, btnEl) {
-      // 定义列表元素变量，避免未定义
       let listEl;
-      // 切换评论区显示/隐藏（仅动态评论需要）
+      // 切换评论区显示/隐藏
       if (btnEl) {
         const commentArea = btnEl.parentElement.querySelector(`#comment-${targetType}-${targetId}`);
-        if (!commentArea) return; // 防止找不到元素
+        if (!commentArea) return;
         commentArea.classList.toggle('hidden');
-        if (commentArea.classList.contains('hidden')) return; // 隐藏则不加载
+        if (commentArea.classList.contains('hidden')) return;
         listEl = commentArea.querySelector('.comment-list');
       } else {
         listEl = document.getElementById('articleCommentList');
       }
 
-      // 初始化列表内容
       listEl.innerHTML = '<p>加载中...</p>';
 
       try {
-        const query = new AV.Query(Comment);
-        query.equalTo('targetType', targetType);
-        query.equalTo('targetId', String(targetId));
-        query.descending('createdAt'); // 按发布时间倒序
-        const comments = await query.find();
-        
+        let comments = [];
+        if (leanCloudInited) {
+          // LeanCloud查询
+          const query = new AV.Query(Comment);
+          query.equalTo('targetType', targetType);
+          query.equalTo('targetId', String(targetId));
+          query.descending('createdAt');
+          comments = await query.find();
+          comments = comments.map(item => ({ ...item.toJSON(), id: item.id }));
+        } else {
+          // 本地存储查询
+          comments = Comment.findByCondition({ targetType, targetId: String(targetId) })
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        }
+
         listEl.innerHTML = '';
         if (comments.length === 0) {
           listEl.innerHTML = '<p>快来抢沙发！</p>';
           return;
         }
 
-        // 渲染评论列表
+        // 渲染评论
         comments.forEach(comment => {
-          const commentData = comment.toJSON();
           listEl.innerHTML += `
             <div class="list-item">
-              <div class="meta">${commentData.nickname} · ${formatTime(commentData.createdAt)}</div>
-              <div class="content">${commentData.content}</div>
+              <div class="meta">${comment.nickname} · ${formatTime(comment.createdAt)}</div>
+              <div class="content">${comment.content}</div>
               <div class="action-btn">
-                <button class="btn btn-${commentData.isProtected ? 'secondary' : 'danger'}" onclick="toggleProtect('comment', '${comment.id}', ${commentData.isProtected || false})">
-                  ${commentData.isProtected ? '取消保护' : '保护'}
+                <button class="btn btn-${comment.isProtected ? 'secondary' : 'danger'}" onclick="toggleProtect('comment', '${comment.id}', ${comment.isProtected || false})">
+                  ${comment.isProtected ? '取消保护' : '保护'}
                 </button>
-                ${!commentData.isProtected ? `<button class="btn btn-danger" onclick="deleteComment('${comment.id}', '${targetType}', '${targetId}')">删除</button>` : ''}
+                ${!comment.isProtected ? `<button class="btn btn-danger" onclick="deleteComment('${comment.id}', '${targetType}', '${targetId}')">删除</button>` : ''}
               </div>
             </div>
           `;
         });
       } catch (err) {
         console.error('加载评论失败：', err);
-        listEl.innerHTML = '<p>加载失败，请重试！</p>';
+        listEl.innerHTML = `<p>加载失败：${err.message}</p>`;
       }
     }
 
-    // 发布评论
     async function publishComment(targetType, targetId, btnEl) {
-      // 获取输入内容（区分动态/文章评论）
+      // 获取输入内容
       let nickname, content, password;
       let commentArea;
       if (targetType === 'dynamic') {
-        commentArea = btnEl ? btnEl.parentElement : document.getElementById(`comment-${targetType}-${targetId}`);
-        if (!commentArea) {
-          alert('评论区未找到！');
-          return;
-        }
+        commentArea = btnEl.parentElement;
         nickname = commentArea.querySelector('.comment-nickname').value.trim();
         content = commentArea.querySelector('.comment-content').value.trim();
         password = commentArea.querySelector('.comment-password').value.trim();
@@ -588,25 +755,33 @@
 
       // 校验
       if (!nickname || !content) {
-        alert('虚了？');
+        alert('虚了？（请输入昵称和评论内容）');
         return;
       }
       if (password !== PASSWORD_PUBLISH) {
-        alert('乐子');
+        alert('乐子（密码错误）');
         return;
       }
 
       try {
-        // 创建评论数据
-        const comment = new Comment();
-        comment.set('targetType', targetType); // dynamic/article
-        comment.set('targetId', String(targetId)); // 关联的动态/文章ID
-        comment.set('nickname', nickname);
-        comment.set('content', content);
-        comment.set('isProtected', false); // 默认未保护
-        await comment.save(); // 保存到LeanCloud
+        const commentData = {
+          targetType,
+          targetId: String(targetId),
+          nickname,
+          content,
+          isProtected: false
+        };
 
-        // 提示并刷新
+        if (leanCloudInited) {
+          // LeanCloud发布
+          const comment = new Comment();
+          comment.set(commentData);
+          await comment.save();
+        } else {
+          // 本地存储发布
+          Comment.save(commentData);
+        }
+
         alert('评论发布成功！');
         // 清空输入框
         if (targetType === 'dynamic') {
@@ -618,97 +793,99 @@
           document.getElementById('articleCommentContent').value = '';
           document.getElementById('articleCommentPassword').value = '';
         }
-        // 重新加载评论
+        // 刷新评论
         loadComments(targetType, targetId, btnEl);
       } catch (err) {
         console.error('发布评论失败：', err);
-        alert('发布失败，请重试！');
+        alert(`发布失败：${err.message}`);
       }
     }
 
-    // 删除评论（需密码+未保护）
     async function deleteComment(commentId, targetType, targetId) {
       if (!confirm('是吗')) return;
-      const password = prompt('密码');
+      const password = prompt('请输入密码（删除评论）');
       if (password !== PASSWORD_PUBLISH) {
         alert('密码错误！');
         return;
       }
 
       try {
-        // 查询评论是否被保护
-        const query = new AV.Query(Comment);
-        const comment = await query.get(commentId);
-        if (comment.get('isProtected')) {
-          alert('略略略~');
-          return;
+        // 检查是否被保护
+        let comment;
+        if (leanCloudInited) {
+          const query = new AV.Query(Comment);
+          comment = await query.get(commentId);
+          if (comment.get('isProtected')) {
+            alert('略略略~（评论已被保护）');
+            return;
+          }
+          await comment.destroy();
+        } else {
+          comment = Comment.get(commentId);
+          if (comment && comment.isProtected) {
+            alert('略略略~（评论已被保护）');
+            return;
+          }
+          Comment.destroy(commentId);
         }
 
-        // 删除评论
-        await comment.destroy();
         alert('评论删除成功！');
-        // 重新加载评论
-        if (targetType === 'article') {
-          loadComments('article', targetId);
-        } else {
-          loadDynamics(); // 动态评论刷新整个动态列表
-        }
+        loadComments(targetType, targetId);
       } catch (err) {
         console.error('删除评论失败：', err);
-        alert('删除失败，请重试！');
+        alert(`删除失败：${err.message}`);
       }
     }
 
     // ------------------------ 保护/取消保护功能 ------------------------
     async function toggleProtect(type, id, isProtectedNow) {
-      const newStatus = !isProtectedNow; // 切换保护状态
+      const newStatus = !isProtectedNow;
       const password = prompt(`请输入${newStatus ? '保护' : '取消保护'}密码`);
       if (password !== PASSWORD_PROTECT) {
-        alert('乐子');
+        alert('乐子（密码错误）');
         return;
       }
 
       try {
-        // 根据类型查询对应数据
-        let query, obj;
-        switch (type) {
-          case 'dynamic':
-            query = new AV.Query(Dynamic);
-            break;
-          case 'article':
-            query = new AV.Query(Article);
-            break;
-          case 'comment':
-            query = new AV.Query(Comment);
-            break;
-          default:
-            alert('类型错误！');
-            return;
-        }
-        obj = await query.get(id);
-        obj.set('isProtected', newStatus);
-        await obj.save(); // 保存状态
-
-        // 提示并刷新
-        alert(`${newStatus ? '保护' : '取消保护'}成功！`);
-        if (type === 'dynamic') loadDynamics();
-        else if (type === 'article') loadArticle(currentArticleId);
-        else {
-          // 评论保护后，刷新对应评论区
-          if (document.getElementById('articleCommentList')) {
-            loadComments('article', currentArticleId);
-          } else {
-            loadDynamics();
+        if (leanCloudInited) {
+          // LeanCloud更新状态
+          let query;
+          switch (type) {
+            case 'dynamic': query = new AV.Query(Dynamic); break;
+            case 'article': query = new AV.Query(Article); break;
+            case 'comment': query = new AV.Query(Comment); break;
+            default: alert('类型错误！'); return;
+          }
+          const obj = await query.get(id);
+          obj.set('isProtected', newStatus);
+          await obj.save();
+        } else {
+          // 本地存储更新状态
+          let model;
+          switch (type) {
+            case 'dynamic': model = Dynamic; break;
+            case 'article': model = Article; break;
+            case 'comment': model = Comment; break;
+            default: alert('类型错误！'); return;
+          }
+          const obj = model.get(id);
+          if (obj) {
+            model.save({ id, isProtected: newStatus });
           }
         }
+
+        alert(`${newStatus ? '保护' : '取消保护'}成功！`);
+        // 刷新数据
+        if (type === 'dynamic') loadDynamics();
+        else if (type === 'article') loadArticle(currentArticleId);
+        else loadComments('article', currentArticleId);
       } catch (err) {
         console.error('保护操作失败：', err);
-        alert('操作失败，请重试！');
+        alert(`操作失败：${err.message}`);
       }
     }
 
     // ------------------------ 工具函数 ------------------------
-    // 格式化时间
     function formatTime(timeStr) {
       if (!timeStr) return '';
       const date = new Date(timeStr);
