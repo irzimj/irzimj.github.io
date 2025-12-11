@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -120,17 +120,17 @@
   <!-- 左侧导航栏（10个索引栏+首页） -->
   <div class="sidebar">
     <h2>WOW</h2>
-    <div class="menu-item active" data-id="home">首页</div>
-    <div class="menu-item" data-id="1">杠十细胞</div>
-    <div class="menu-item" data-id="2">清风</div>
-    <div class="menu-item" data-id="3">过往云烟</div>
-    <div class="menu-item" data-id="4">星月夜</div>
-    <div class="menu-item" data-id="5">竞选CCF主席</div>
-    <div class="menu-item" data-id="6">鼻子</div>
-    <div class="menu-item" data-id="7">金牌教练之死</div>
-    <div class="menu-item" data-id="8">索引栏8</div>
-    <div class="menu-item" data-id="9">索引栏9</div>
-    <div class="menu-item" data-id="10">索引栏10</div>
+    <div class="menu-item active" data-id="home" data-name="首页">首页</div>
+    <div class="menu-item" data-id="1" data-name="杠十细胞">杠十细胞</div>
+    <div class="menu-item" data-id="2" data-name="清风">清风</div>
+    <div class="menu-item" data-id="3" data-name="过往云烟">过往云烟</div>
+    <div class="menu-item" data-id="4" data-name="星月夜">星月夜</div>
+    <div class="menu-item" data-id="5" data-name="竞选CCF主席">竞选CCF主席</div>
+    <div class="menu-item" data-id="6" data-name="鼻子">鼻子</div>
+    <div class="menu-item" data-id="7" data-name="金牌教练之死">金牌教练之死</div>
+    <div class="menu-item" data-id="8" data-name="索引栏8">索引栏8</div>
+    <div class="menu-item" data-id="9" data-name="索引栏9">索引栏9</div>
+    <div class="menu-item" data-id="10" data-name="索引栏10">索引栏10</div>
     <button class="back-btn hidden" id="backBtn">返回</button>
   </div>
 
@@ -222,6 +222,7 @@
     const PASSWORD_PROTECT = "Czmxzr20091228"; 
 
     let currentArticleId = 1; // 当前选中的索引栏ID
+    let currentArticleName = "杠十细胞"; // 当前选中的索引栏名称
 
     // 页面初始化
     document.addEventListener('DOMContentLoaded', () => {
@@ -231,9 +232,13 @@
       // 导航栏点击事件
       document.querySelectorAll('.menu-item').forEach(item => {
         item.addEventListener('click', () => {
+          // 移除所有active类
           document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+          // 给当前点击的项添加active类
           item.classList.add('active');
           const id = item.dataset.id;
+          const name = item.dataset.name; // 获取索引栏名称
+          
           if (id === 'home') {
             // 切换到首页
             document.getElementById('homePage').classList.remove('hidden');
@@ -242,9 +247,13 @@
           } else {
             // 切换到文章页面
             currentArticleId = id;
+            currentArticleName = name;
+            // 显示文章页面，隐藏首页
             document.getElementById('homePage').classList.add('hidden');
             document.getElementById('articlePage').classList.remove('hidden');
-            document.getElementById('articleTitle').textContent = `索引栏${id}`;
+            // 设置文章标题为索引栏名称
+            document.getElementById('articleTitle').textContent = name;
+            // 显示返回按钮
             document.getElementById('backBtn').classList.remove('hidden');
             // 加载文章内容
             loadArticle(id);
@@ -509,12 +518,21 @@
     // ------------------------ 评论相关功能 ------------------------
     // 加载评论（支持动态/文章评论）
     async function loadComments(targetType, targetId, btnEl) {
+      // 定义列表元素变量，避免未定义
+      let listEl;
       // 切换评论区显示/隐藏（仅动态评论需要）
       if (btnEl) {
         const commentArea = btnEl.parentElement.querySelector(`#comment-${targetType}-${targetId}`);
+        if (!commentArea) return; // 防止找不到元素
         commentArea.classList.toggle('hidden');
         if (commentArea.classList.contains('hidden')) return; // 隐藏则不加载
+        listEl = commentArea.querySelector('.comment-list');
+      } else {
+        listEl = document.getElementById('articleCommentList');
       }
+
+      // 初始化列表内容
+      listEl.innerHTML = '<p>加载中...</p>';
 
       try {
         const query = new AV.Query(Comment);
@@ -522,11 +540,6 @@
         query.equalTo('targetId', String(targetId));
         query.descending('createdAt'); // 按发布时间倒序
         const comments = await query.find();
-        
-        // 找到评论列表容器
-        const listEl = btnEl 
-          ? btnEl.parentElement.querySelector('.comment-list') 
-          : document.getElementById('articleCommentList');
         
         listEl.innerHTML = '';
         if (comments.length === 0) {
@@ -560,8 +573,13 @@
     async function publishComment(targetType, targetId, btnEl) {
       // 获取输入内容（区分动态/文章评论）
       let nickname, content, password;
+      let commentArea;
       if (targetType === 'dynamic') {
-        const commentArea = document.getElementById(`comment-${targetType}-${targetId}`) || btnEl.parentElement;
+        commentArea = btnEl ? btnEl.parentElement : document.getElementById(`comment-${targetType}-${targetId}`);
+        if (!commentArea) {
+          alert('评论区未找到！');
+          return;
+        }
         nickname = commentArea.querySelector('.comment-nickname').value.trim();
         content = commentArea.querySelector('.comment-content').value.trim();
         password = commentArea.querySelector('.comment-password').value.trim();
@@ -679,8 +697,12 @@
         if (type === 'dynamic') loadDynamics();
         else if (type === 'article') loadArticle(currentArticleId);
         else {
-          loadDynamics();
-          loadComments('article', currentArticleId);
+          // 评论保护后，刷新对应评论区
+          if (document.getElementById('articleCommentList')) {
+            loadComments('article', currentArticleId);
+          } else {
+            loadDynamics();
+          }
         }
       } catch (err) {
         console.error('保护操作失败：', err);
