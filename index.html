@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>个人动态网站</title>
+  <title>SAR</title>
   <style>
     /* 莫兰迪色系：酒红#8B2323、深黄#C19A6B、墨绿#2F4F4F */
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -121,7 +121,7 @@
   <div class="sidebar">
     <h2>WOW</h2>
     <div class="menu-item active" data-id="home" data-name="首页">首页</div>
-    <div class="menu-item" data-id="1" data-name="杠十细胞">杠十细胞</div>
+    <div class="menu-item" data-id="1" data-name="杠十细胞">杠十细胞(残缺)</div>
     <div class="menu-item" data-id="2" data-name="清风">清风</div>
     <div class="menu-item" data-id="3" data-name="过往云烟">过往云烟</div>
     <div class="menu-item" data-id="4" data-name="星月夜">星月夜</div>
@@ -137,7 +137,7 @@
     <div id="homePage" class="page">
       <div class="header">
         <h1>SAR暗网</h1>
-        <p>最近一次更新:2025/12/10</p>
+        <p>最近一次更新:2025/12/12/00:55</p>
       </div>
 
       <!-- 发布动态 -->
@@ -145,7 +145,7 @@
         <h3>interesting</h3>
         <textarea id="dynamicContent" placeholder="..."></textarea>
         <div class="password-input">
-          <input type="password" id="dynamicPassword" placeholder="输入密码（xzr110101100）">
+          <input type="password" id="dynamicPassword" placeholder="输入密码">
         </div>
         <button class="btn btn-primary" id="publishDynamicBtn">发布</button>
         <div id="dynamicMsg" style="margin-top: 10px; color: #8B2323;"></div>
@@ -161,7 +161,7 @@
     <!-- 文章页面（7个索引栏共用） -->
     <div id="articlePage" class="page hidden">
       <div class="header">
-        <h1 id="articleTitle">杠十细胞</h1>
+        <h1 id="articleTitle">杠十细胞(残缺)</h1>
       </div>
 
       <!-- 发布/编辑文章 -->
@@ -169,7 +169,7 @@
         <h3>发布</h3>
         <textarea id="articleContent" placeholder="..."></textarea>
         <div class="password-input">
-          <input type="password" id="articlePassword" placeholder="密码（xzr110101100）">
+          <input type="password" id="articlePassword" placeholder="密码">
         </div>
         <button class="btn btn-primary" id="publishArticleBtn">保存</button>
         <div id="articleMsg" style="margin-top: 10px; color: #8B2323;"></div>
@@ -186,7 +186,7 @@
         </div>
         <textarea id="articleCommentContent" placeholder="天青色等烟雨，评论区等你..."></textarea>
         <div class="password-input">
-          <input type="password" id="articleCommentPassword" placeholder="密码（xzr110101100）">
+          <input type="password" id="articleCommentPassword" placeholder="密码">
         </div>
         <button class="btn btn-primary" id="publishArticleCommentBtn">发布</button>
         <div id="articleCommentMsg" style="margin-top: 10px; color: #8B2323;"></div>
@@ -453,7 +453,7 @@
 
       // 校验
       if (!content) {
-        msgEl.textContent = '没货啊（请输入动态内容）';
+        msgEl.textContent = '没货啊';
         return;
       }
       if (password !== PASSWORD_PUBLISH) {
@@ -474,7 +474,7 @@
         }
 
         // 提示并刷新
-        msgEl.textContent = '嘿嘿（发布成功）';
+        msgEl.textContent = '嘿嘿';
         document.getElementById('dynamicContent').value = '';
         document.getElementById('dynamicPassword').value = '';
         loadDynamics();
@@ -486,9 +486,9 @@
 
     async function deleteDynamic(dynamicId) {
       if (!confirm('若是精华，建议勿删')) return;
-      const password = prompt('请输入密码（删除动态）');
+      const password = prompt('请输入密码');
       if (password !== PASSWORD_PUBLISH) {
-        alert('乐子（密码错误）');
+        alert('乐子');
         return;
       }
 
@@ -499,7 +499,7 @@
           const query = new AV.Query(Dynamic);
           dynamic = await query.get(dynamicId);
           if (dynamic.get('isProtected')) {
-            alert('你不配（动态已被保护，无法删除）');
+            alert('你不配');
             return;
           }
           // 删除动态
@@ -513,7 +513,7 @@
         } else {
           dynamic = Dynamic.get(dynamicId);
           if (dynamic && dynamic.isProtected) {
-            alert('你不配（动态已被保护，无法删除）');
+            alert('你不配');
             return;
           }
           // 删除动态
@@ -584,7 +584,7 @@
 
       // 校验
       if (!content) {
-        msgEl.textContent = '虚了？（请输入文章内容）';
+        msgEl.textContent = '虚了？';
         return;
       }
       if (password !== PASSWORD_PUBLISH) {
@@ -633,10 +633,10 @@
     }
 
     async function deleteArticle(articleId, indexId) {
-      if (!confirm('手滑了吗')) return;
-      const password = prompt('请输入密码（删除文章）');
+      if (!confirm('若是精华，建议勿删')) return;
+      const password = prompt('请输入密码');
       if (password !== PASSWORD_PUBLISH) {
-        alert('乐子（密码错误）');
+        alert('乐子');
         return;
       }
 
@@ -755,11 +755,11 @@
 
       // 校验
       if (!nickname || !content) {
-        alert('虚了？（请输入昵称和评论内容）');
+        alert('虚了？');
         return;
       }
       if (password !== PASSWORD_PUBLISH) {
-        alert('乐子（密码错误）');
+        alert('乐子');
         return;
       }
 
@@ -782,7 +782,7 @@
           Comment.save(commentData);
         }
 
-        alert('评论发布成功！');
+        alert('good');
         // 清空输入框
         if (targetType === 'dynamic') {
           commentArea.querySelector('.comment-nickname').value = '';
@@ -803,9 +803,9 @@
 
     async function deleteComment(commentId, targetType, targetId) {
       if (!confirm('是吗')) return;
-      const password = prompt('请输入密码（删除评论）');
+      const password = prompt('请输入密码');
       if (password !== PASSWORD_PUBLISH) {
-        alert('密码错误！');
+        alert('6,樂');
         return;
       }
 
@@ -816,14 +816,14 @@
           const query = new AV.Query(Comment);
           comment = await query.get(commentId);
           if (comment.get('isProtected')) {
-            alert('略略略~（评论已被保护）');
+            alert('略略略~');
             return;
           }
           await comment.destroy();
         } else {
           comment = Comment.get(commentId);
           if (comment && comment.isProtected) {
-            alert('略略略~（评论已被保护）');
+            alert('略略略~');
             return;
           }
           Comment.destroy(commentId);
@@ -842,7 +842,7 @@
       const newStatus = !isProtectedNow;
       const password = prompt(`请输入${newStatus ? '保护' : '取消保护'}密码`);
       if (password !== PASSWORD_PROTECT) {
-        alert('乐子（密码错误）');
+        alert('乐子');
         return;
       }
 
@@ -901,3 +901,4 @@
   </script>
 </body>
 </html>
+
