@@ -164,8 +164,8 @@
         <h1 id="articleTitle">杠十细胞(残缺)</h1>
       </div>
 
-      <!-- 发布/编辑文章 -->
-      <div class="card">
+      <!-- 发布/编辑文章（新增id用于控制显示隐藏） -->
+      <div class="card" id="articlePublishCard">
         <h3>发布</h3>
         <textarea id="articleContent" placeholder="..."></textarea>
         <div class="password-input">
@@ -368,7 +368,6 @@
             document.getElementById('articleTitle').textContent = name;
             document.getElementById('backBtn').classList.remove('hidden');
             loadArticle(id);
-            loadComments('article', id);
           }
         });
       });
@@ -457,7 +456,7 @@
         return;
       }
       if (password !== PASSWORD_PUBLISH) {
-        msgEl.textContent = '乐子（密码错误，正确密码：${PASSWORD_PUBLISH}）';
+        msgEl.textContent = `乐子（密码错误，正确密码：${PASSWORD_PUBLISH}）`; // 修复模板字符串错误
         return;
       }
 
@@ -535,6 +534,7 @@
     async function loadArticle(indexId) {
       const contentEl = document.getElementById('articleContent');
       const displayEl = document.getElementById('articleContentDisplay');
+      const publishCard = document.getElementById('articlePublishCard'); // 发布卡片元素
       displayEl.innerHTML = '<p>加载中...</p>';
 
       try {
@@ -553,7 +553,9 @@
           article = articles.length > 0 ? articles[0] : null;
         }
 
+        // 核心修复：根据是否有文章控制发布框显示/隐藏
         if (article) {
+          publishCard.classList.add('hidden'); // 有文章则隐藏发布框
           contentEl.value = article.content;
           displayEl.innerHTML = `
             <div class="list-item">
@@ -568,12 +570,16 @@
             </div>
           `;
         } else {
+          publishCard.classList.remove('hidden'); // 无文章则显示发布框
           contentEl.value = '';
           displayEl.innerHTML = '<p>暂无文章，快来发布第一篇吧！</p>';
         }
+        // 加载评论
+        loadComments('article', indexId);
       } catch (err) {
         console.error('加载文章失败：', err);
         displayEl.innerHTML = `<p>加载失败：${err.message}（功能已切换到本地存储）</p>`;
+        publishCard.classList.remove('hidden'); // 加载失败也显示发布框
       }
     }
 
@@ -588,7 +594,7 @@
         return;
       }
       if (password !== PASSWORD_PUBLISH) {
-        msgEl.textContent = '乐子（密码错误，正确密码：${PASSWORD_PUBLISH}）';
+        msgEl.textContent = `乐子（密码错误，正确密码：${PASSWORD_PUBLISH}）`; // 修复模板字符串错误
         return;
       }
 
@@ -625,7 +631,7 @@
         }
 
         msgEl.textContent = '文章保存成功！';
-        loadArticle(currentArticleId);
+        loadArticle(currentArticleId); // 保存后重新加载，自动隐藏发布框
       } catch (err) {
         console.error('保存文章失败：', err);
         msgEl.textContent = `保存失败：${err.message}`;
@@ -672,7 +678,7 @@
         }
 
         alert('文章删除成功！');
-        loadArticle(indexId);
+        loadArticle(indexId); // 删除后重新加载，自动显示发布框
       } catch (err) {
         console.error('删除文章失败：', err);
         alert(`删除失败：${err.message}`);
@@ -837,7 +843,7 @@
       }
     }
 
-    // ------------------------ 保护/取消保护功能 ------------------------
+    // ------------------------ 保护/取消保护功能（修复核心逻辑） ------------------------
     async function toggleProtect(type, id, isProtectedNow) {
       const newStatus = !isProtectedNow;
       const password = prompt(`请输入${newStatus ? '保护' : '取消保护'}密码`);
@@ -875,10 +881,14 @@
         }
 
         alert(`${newStatus ? '保护' : '取消保护'}成功！`);
-        // 刷新数据
-        if (type === 'dynamic') loadDynamics();
-        else if (type === 'article') loadArticle(currentArticleId);
-        else loadComments('article', currentArticleId);
+        // 刷新数据（修复评论刷新逻辑）
+        if (type === 'dynamic') {
+          loadDynamics();
+        } else if (type === 'article') {
+          loadArticle(currentArticleId);
+        } else if (type === 'comment') {
+          loadComments('article', currentArticleId);
+        }
       } catch (err) {
         console.error('保护操作失败：', err);
         alert(`操作失败：${err.message}`);
@@ -901,4 +911,3 @@
   </script>
 </body>
 </html>
-
