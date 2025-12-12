@@ -137,7 +137,7 @@
     <div id="homePage" class="page">
       <div class="header">
         <h1>SAR暗网</h1>
-        <p>最近一次更新:2025/12/12/00:55</p>
+        <p>最近一次更新:2025/12/12/23:20</p>
       </div>
 
       <!-- 发布动态 -->
@@ -310,6 +310,19 @@
       }
     }
 
+    // 处理换行的工具函数
+    function formatContentWithLineBreak(content) {
+      if (!content) return '';
+      // 将换行符替换为<br>标签，同时转义HTML特殊字符防止XSS
+      return content
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/\n/g, '<br>');
+    }
+
     const PASSWORD_PUBLISH = "xzr110101100";
     const PASSWORD_PROTECT = "Czmxzr20091228"; 
 
@@ -417,7 +430,7 @@
           item.className = 'list-item';
           item.innerHTML = `
             <div class="meta">发布时间：${formatTime(dynamic.createdAt)}</div>
-            <div class="content">${dynamic.content}</div>
+            <div class="content">${formatContentWithLineBreak(dynamic.content)}</div>
             <div class="action-btn">
               <button class="btn btn-secondary" onclick="loadComments('dynamic', '${dynamic.id}', this)">查看评论</button>
               <button class="btn btn-${dynamic.isProtected ? 'secondary' : 'danger'}" onclick="toggleProtect('dynamic', '${dynamic.id}', ${dynamic.isProtected || false})">
@@ -560,7 +573,7 @@
           displayEl.innerHTML = `
             <div class="list-item">
               <div class="meta">最后更新：${formatTime(article.updatedAt)}</div>
-              <div class="content">${article.content}</div>
+              <div class="content">${formatContentWithLineBreak(article.content)}</div>
               <div class="action-btn">
                 <button class="btn btn-${article.isProtected ? 'secondary' : 'danger'}" onclick="toggleProtect('article', '${article.id}', ${article.isProtected || false})">
                   ${article.isProtected ? '取消保护' : '保护'}
@@ -728,7 +741,7 @@
           listEl.innerHTML += `
             <div class="list-item">
               <div class="meta">${comment.nickname} · ${formatTime(comment.createdAt)}</div>
-              <div class="content">${comment.content}</div>
+              <div class="content">${formatContentWithLineBreak(comment.content)}</div>
               <div class="action-btn">
                 <button class="btn btn-${comment.isProtected ? 'secondary' : 'danger'}" onclick="toggleProtect('comment', '${comment.id}', ${comment.isProtected || false})">
                   ${comment.isProtected ? '取消保护' : '保护'}
