@@ -1,1122 +1,838 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SAR</title>
-  <style>
-    /* 莫兰迪色系：酒红#8B2323、深黄#C19A6B、墨绿#2F4F4F */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #f5f0e6; font-family: "微软雅黑"; min-height: 100vh; }
-    
-    /* 左侧导航栏（7个索引栏+首页，保留滚动功能） */
-    .sidebar { 
-      width: 220px; height: 100vh; 
-      background: #2F4F4F; color: #fff; 
-      position: fixed; top: 0; left: 0;
-      padding: 20px;
-      overflow-y: auto; /* 垂直滚动：内容超出时显示滚动条 */
-      overflow-x: hidden; /* 隐藏水平滚动条 */
-      scrollbar-width: thin; /* Firefox滚动条美化 */
-      scrollbar-color: #C19A6B #3A5F5F; /* 滚动条颜色（深黄滑块+墨绿背景） */
-    }
-    /* Chrome/Edge/Safari滚动条美化 */
-    .sidebar::-webkit-scrollbar {
-      width: 6px; /* 滚动条宽度 */
-    }
-    .sidebar::-webkit-scrollbar-track {
-      background: #3A5F5F; /* 滚动条轨道颜色 */
-    }
-    .sidebar::-webkit-scrollbar-thumb {
-      background-color: #C19A6B; /* 滚动条滑块颜色（匹配莫兰迪深黄） */
-      border-radius: 3px; /* 滑块圆角 */
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAR</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", 宋体, sans-serif;
+        }
 
-    .sidebar h2 { 
-      color: #C19A6B; margin-bottom: 30px; 
-      text-align: center; border-bottom: 1px solid #C19A6B;
-      padding-bottom: 10px;
-    }
-    .menu-item { 
-      padding: 12px; margin: 10px 0; 
-      background: #3A5F5F; border-radius: 6px; 
-      cursor: pointer; transition: 0.3s;
-    }
-    .menu-item:hover { background: #8B2323; }
-    .menu-item.active { background: #8B2323; }
-    .back-btn {
-      margin-top: 20px; padding: 10px;
-      background: #C19A6B; color: #fff;
-      border: none; border-radius: 6px;
-      cursor: pointer; width: 100%;
-      margin-bottom: 10px; /* 避免按钮贴滚动条 */
-    }
+        /* 莫兰迪色系定义 - 调整为暗色系（核心修改部分） */
+        :root {
+            --main-green: #2A3916; /* 加深的低饱和莫兰迪深绿（主色） */
+            --main-green-light: #374821; /* 深绿浅调（更暗） */
+            --main-green-dark: #1F2B10; /* 深绿暗调（更深） */
+            --aux-red: #5D4A4A;    /* 低饱和暗红（加深） */
+            --aux-red-light: #6D5A5A; /* 暗红浅调（加深） */
+            --aux-yellow: #635845; /* 低饱和暗黄（加深） */
+            --aux-yellow-light: #726855; /* 暗黄浅调（加深） */
+            --aux-blue: #2D3A48;   /* 低饱和暗蓝（加深） */
+            --bg-color: #24231F;   /* 页面背景（暗黄系深色） */
+            --text-color: #E8E4D8; /* 正文文字（浅米色，提高对比度） */
+            --sidebar-bg: #2A3916; /* 侧边栏背景（加深的墨绿） */
+            --sidebar-text: #E8E4D8; /* 侧边栏文字（浅米色） */
+            --hover-color: #374821;/* hover高亮（深绿浅调） */
+            --card-bg: #2D2C27;    /* 卡片背景色（深红棕暗调） */
+            --shadow-light: 0 2px 8px rgba(0,0,0,0.2); /* 浅阴影（加深） */
+            --shadow-medium: 0 4px 12px rgba(0,0,0,0.3); /* 中阴影（加深） */
+            --card-radius: 12px;   /* 统一卡片圆角 */
+            --card-padding: 40px;  /* 统一卡片内边距 */
+            --modal-animate-time: 300ms; /* 弹窗动画时长 */
+        }
 
-    /* 主内容区 */
-    .main { 
-      margin-left: 220px; padding: 30px;
-    }
-    .header { 
-      text-align: center; margin-bottom: 40px;
-      color: #8B2323;
-    }
-    .header h1 { font-size: 2.5rem; margin-bottom: 10px; }
-    .header p { color: #2F4F4F; font-size: 1.1rem; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            min-height: 100vh;
+            scroll-behavior: smooth; /* 全局平滑滚动 */
+            line-height: 1.6;
+            letter-spacing: 0.3px;
+        }
 
-    /* 通用卡片样式 */
-    .card { 
-      background: #fff; padding: 25px; 
-      border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      margin-bottom: 30px;
-    }
-    .card h3 { 
-      color: #8B2323; margin-bottom: 20px;
-      border-left: 4px solid #C19A6B; padding-left: 10px;
-    }
-    textarea { 
-      width: 100%; height: 120px; padding: 12px;
-      border: 1px solid #C19A6B; border-radius: 6px;
-      margin-bottom: 15px; resize: vertical;
-    }
-    .input-group { margin-bottom: 15px; }
-    .input-group input { 
-      width: 100%; padding: 10px;
-      border: 1px solid #C19A6B; border-radius: 6px;
-    }
-    .btn { 
-      padding: 10px 20px; border: none; 
-      border-radius: 6px; cursor: pointer;
-      margin-right: 10px;
-    }
-    .btn-primary { background: #8B2323; color: #fff; }
-    .btn-secondary { background: #C19A6B; color: #fff; }
-    .btn-danger { background: #dc3545; color: #fff; }
+        /* 左侧索引栏样式 */
+        .sidebar {
+            width: 240px;
+            background-color: var(--sidebar-bg);
+            border-right: 3px solid var(--aux-yellow);
+            padding: 30px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-medium);
+            z-index: 10;
+        }
 
-    /* 动态/文章/评论列表 */
-    .list-item { 
-      padding: 20px; border-bottom: 1px solid #eee;
-      margin-bottom: 15px;
-    }
-    .list-item:last-child { border-bottom: none; }
-    .list-item .meta { 
-      color: #666; font-size: 0.9rem;
-      margin-bottom: 10px;
-    }
-    .list-item .content { line-height: 1.6; color: #333; }
-    .action-btn { margin-top: 10px; }
+        /* 侧边栏标题装饰 */
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 10px;
+        }
 
-    /* 密码输入框 */
-    .password-input { margin: 10px 0; }
-    /* 隐藏元素 */
-    .hidden { display: none; }
+        .sidebar-header h2 {
+            color: var(--sidebar-text);
+            font-size: 18px;
+            font-weight: normal;
+            letter-spacing: 1px;
+            text-align: center;
+            padding: 8px 0;
+            background-color: rgba(0,0,0,0.2); /* 加深背景 */
+            border-radius: 6px;
+        }
 
-    /* 全局平滑滚动 */
-    html {
-      scroll-behavior: smooth;
-    }
+        .sidebar .nav-item {
+            list-style: none;
+            margin: 4px 0;
+        }
 
-    /* 手机适配（新增：修复手机端显示问题） */
-    @media (max-width: 768px) {
-      .sidebar { width: 100%; height: auto; position: relative; }
-      .main { margin-left: 0; padding: 15px; }
-      .header h1 { font-size: 1.8rem; }
-    }
-  </style>
+        .sidebar .nav-link {
+            display: block;
+            padding: 14px 20px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            font-size: 16px;
+            border-left: 3px solid transparent;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 0 8px 8px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 侧边栏链接hover渐变背景 */
+        .sidebar .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255,255,255,0.12); /* 加深hover背景 */
+            transform: translateX(-100%);
+            transition: transform 0.4s ease;
+            z-index: 0;
+        }
+
+        /* 侧边栏链接hover效果 */
+        .sidebar .nav-link:hover {
+            background-color: var(--hover-color);
+            color: #F2F2EC;
+            border-left-color: var(--aux-red);
+            transform: translateX(3px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+		.sidebar .nav-link.active {
+			background-color: var(--main-green-dark);
+			border-left-color: var(--aux-yellow);
+			color: #F2F2EC;
+			box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+		}
+        .sidebar .nav-link:hover::before {
+            transform: translateX(0);
+        }
+
+        .sidebar .nav-link span {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 右侧内容区域 */
+        .content {
+            flex: 1;
+            margin-left: 240px;
+            padding: 50px 60px;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        /* 通用板块样式（统一所有内容板块） */
+        .content-section {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: none;
+            background-color: var(--card-bg);
+            padding: var(--card-padding);
+            border-radius: var(--card-radius);
+            box-shadow: var(--shadow-light);
+            line-height: 1.9;
+        }
+
+        /* 主页样式（修复样式缺失问题） */
+        #section-home {
+            border-top: 4px solid var(--aux-red);
+            font-size: 18px;
+            color: var(--text-color); /* 改为统一文字色 */
+        }
+
+        /* 图片展示区域 */
+        #section-images {
+            border-top: 4px solid var(--aux-blue);
+        }
+
+        /* 文章区域样式 */
+        .section-article {
+            border-left: 4px solid var(--aux-yellow);
+        }
+
+        /* 空内容区域样式（统一视觉） */
+        #section-empty-qf {
+            text-align: center;
+            padding: 80px 0;
+            color: var(--aux-yellow-light); /* 调整文字色对比度 */
+            font-size: 22px;
+        }
+
+        #section-empty-qf::after {
+            content: '✨';
+            display: block;
+            font-size: 40px;
+            margin-top: 20px;
+            opacity: 0.6;
+        }
+
+        /* 标题通用样式 */
+        .section-title {
+            font-size: 30px;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+            letter-spacing: 1px;
+            position: relative;
+            border-bottom: 2px solid var(--main-green-light); /* 调整边框色 */
+            color: var(--text-color); /* 标题文字色统一 */
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 2px;
+            background-color: var(--aux-yellow);
+        }
+
+        /* 文章标题配色 */
+        .title-red { color: #C8B8A8; } /* 调整红色标题为暗系莫兰迪红 */
+        .title-blue { color: #A8B0BA; } /* 调整蓝色标题为暗系莫兰迪蓝 */
+
+        .article-content {
+		font-size: 16px;
+		color: var(--text-color);
+		white-space: pre-line;
+		line-height: 1.8; /* 增加行高提升可读性 */
+		letter-spacing: 0.5px;
+		padding: 20px;
+		background-color: rgba(45, 44, 39, 0.6);
+		border-radius: 8px;
+		}
+
+        /* 图片容器样式 */
+        .images-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+        }
+
+        .image-item {
+            border: 2px solid var(--main-green-light); /* 调整边框色 */
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: #33322D; /* 图片卡片背景加深 */
+        }
+
+        .image-item:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: var(--shadow-medium);
+            border-color: var(--aux-yellow);
+        }
+
+        .image-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+
+        .image-item:hover img {
+            transform: scale(1.05);
+        }
+
+        /* 密码弹窗样式 */
+        .password-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); /* 弹窗背景加深 */
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            backdrop-filter: blur(2px);
+            transition: opacity var(--modal-animate-time) ease;
+            opacity: 0;
+        }
+
+        .password-modal.show {
+            opacity: 1;
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: 40px;
+            border-radius: var(--card-radius);
+            width: 380px;
+            text-align: center;
+            border: 3px solid var(--main-green-light); /* 弹窗边框调整 */
+            box-shadow: var(--shadow-medium);
+            transform: translateY(-20px);
+            transition: transform var(--modal-animate-time) ease;
+        }
+
+        .password-modal.show .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-content h3 {
+            color: #D8C8B8; /* 弹窗标题色调整 */
+            margin-bottom: 25px;
+            font-size: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-content input {
+            width: 80%;
+            padding: 12px 15px;
+            margin-bottom: 25px;
+            border: 1px solid var(--main-green-light); /* 输入框边框调整 */
+            border-radius: 6px;
+            font-size: 16px;
+            background-color: #33322D; /* 输入框背景暗系 */
+            color: var(--text-color); /* 输入框文字色 */
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .modal-content input:focus {
+            outline: none;
+            border-color: var(--aux-red);
+            box-shadow: 0 0 0 3px rgba(93, 74, 74, 0.3); /* 输入框聚焦阴影调整 */
+        }
+
+        .modal-content button {
+            padding: 12px 24px;
+            margin: 0 8px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+        }
+
+        #confirmPwd {
+            background-color: var(--main-green);
+            color: var(--text-color);
+        }
+
+        #confirmPwd:hover {
+            background-color: var(--main-green-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(55, 72, 33, 0.3); /* 按钮阴影调整 */
+        }
+
+        #cancelPwd {
+            background-color: var(--aux-red);
+            color: var(--text-color);
+        }
+
+        #cancelPwd:hover {
+            background-color: var(--aux-red-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(109, 90, 90, 0.3); /* 按钮阴影调整 */
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 200px;
+            }
+            .content {
+                margin-left: 200px;
+                padding: 30px 30px;
+            }
+            .content-section {
+                padding: 30px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: static;
+                border-right: none;
+                border-bottom: 3px solid var(--aux-yellow);
+            }
+            .content {
+                margin-left: 0;
+                padding: 20px 20px;
+            }
+            .modal-content {
+                width: 90%;
+                padding: 30px 20px;
+            }
+            #section-empty-qf {
+                padding: 40px 20px;
+                font-size: 18px;
+            }
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(45, 44, 39, 0.5); /* 滚动条轨道暗系 */
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--main-green-light);
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--main-green);
+        }
+    </style>
 </head>
 <body>
-  <!-- 左侧导航栏（首页+7个有名称的索引栏） -->
-  <div class="sidebar">
-    <h2>WOW</h2>
-    <div class="menu-item active" data-id="home" data-name="首页">首页</div>
-    <div class="menu-item" data-id="1" data-name="杠十细胞">杠十细胞(残缺)</div>
-    <div class="menu-item" data-id="2" data-name="清风">清风</div>
-    <div class="menu-item" data-id="3" data-name="过往云烟">过往云烟</div>
-    <div class="menu-item" data-id="4" data-name="星月夜">星月夜</div>
-    <div class="menu-item" data-id="5" data-name="竞选CCF主席">竞选CCF主席</div>
-    <div class="menu-item" data-id="6" data-name="鼻子">鼻子</div>
-    <div class="menu-item" data-id="7" data-name="金牌教练之死">金牌教练之死</div>
-    <button class="back-btn hidden" id="backBtn">返回</button>
-  </div>
-
-  <!-- 主内容区 -->
-  <div class="main">
-    <!-- 首页（发布动态） -->
-    <div id="homePage" class="page">
-      <div class="header">
-        <h1>SAR暗网</h1>
-        <p>最近一次更新:2025/12/12/23:50</p>
-      </div>
-
-      <!-- 发布动态 -->
-      <div class="card">
-        <h3>interesting</h3>
-        <textarea id="dynamicContent" placeholder="..."></textarea>
-        <div class="password-input">
-          <input type="password" id="dynamicPassword" placeholder="输入密码">
+    <!-- 左侧索引栏 -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>有趣的西东</h2>
         </div>
-        <button class="btn btn-primary" id="publishDynamicBtn">发布</button>
-        <div id="dynamicMsg" style="margin-top: 10px; color: #8B2323;"></div>
-      </div>
+        <ul>
+            <li class="nav-item"><a href="#" class="nav-link" data-target="section-home"><span>首页</span></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-target="section-images"><span>好图</span></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-target="section-gsxb"><span>《杠十细胞（残缺）》</span></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-target="section-empty-qf"><span>《清风》</span></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-target="section-gwyy"><span>《过往云烟》</span></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-target="section-xyy"><span>《星月夜》</span></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-target="section-bz"><span>《鼻子》</span></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-target="section-jxCCF"><span>《竞选CCF主席》</span></a></li>
+            <li class="nav-item"><a href="#" class="nav-link" data-target="section-jplj"><span>《金牌教练之死》</span></a></li>
+        </ul>
+    </aside>
 
-      <!-- 动态列表 -->
-      <div class="card">
-        <h3>好玩的</h3>
-        <div id="dynamicList"></div>
-      </div>
+    <!-- 右侧内容区域 -->
+    <main class="content">
+        <!-- 主页区域（修复样式绑定） -->
+        <section class="content-section" id="section-home">
+            <h2 class="section-title title-red">SAR暗网</h2>
+            <div class="home-content">
+                你好呀，在这个纯静态的网站，很可惜是没有交互功能的（可恶的leancloud用不了），但这里的东西都很有趣，随便看看吧~发布日期:2025/12/13;最近更新:2025/12/13/22:05
+            </div>
+        </section>
+
+        <!-- 好图区域（密码验证后显示） -->
+        <section class="content-section" id="section-images">
+            <h2 class="section-title title-blue">好图展示</h2>
+            <div class="images-container">
+                <!-- 示例图片，需替换为img文件夹内的实际图片路径 -->
+				<div class="image-item"><img src="img/0000.jpg" alt="抗日神剧"></div>
+                <div class="image-item"><img src="img/000.jpg" alt="孟浩然"></div>
+                <div class="image-item"><img src="img/111.jpg" alt="∑"></div>
+                <div class="image-item"><img src="img/222.jpg" alt="黄总"></div>
+				<div class="image-item"><img src="img/333.jpg" alt=".."></div>
+                <div class="image-item"><img src="img/444.jpg" alt="潮男"></div>
+                <div class="image-item"><img src="img/555.jpg" alt="小虎"></div>
+				<div class="image-item"><img src="img/666.jpg" alt="合"></div>
+                <div class="image-item"><img src="img/777.jpg" alt="那抓"></div>
+                <div class="image-item"><img src="img/888.jpg" alt="就是帅..."></div>
+				<div class="image-item"><img src="img/999.jpg" alt="三樂"></div>
+            </div>
+        </section>
+
+        <!-- 杠十细胞（残缺）文章区域 -->
+        <section class="content-section section-article" id="section-gsxb">
+            <h2 class="section-title title-red">《杠十细胞（残缺）》</h2>
+            <div class="article-content">
+叠甲：本人生物蒟蒻，有错请喷；甄士隐贾雨村；故事玄乎，文笔极烂。
+ 离细胞分裂还有一百多天，细胞里的生活依旧如此，平淡又不失韵味。各个细胞器活性检测成绩理想，而我呢，作为复杂扭曲的内质网依旧摆烂。我身边的朋友，花里胡哨，往后会一一细说。
+ 上课真是最坐牢的时光，少不了一个聊天搭子。以我这魔性馕状道管结构，在哪安身都有人可聊。我的斜后桌平常也打乒乓球（细胞基质那么多水，这球咋打的不必管），也就有了一个话题；最关键的是，他也聊少啊....上课总讲话，所以乐极生悲，细胞核把我座位调走了。但正是这一调，也就祸中有福，坐在了线粒体斜前方、核糖体正前方。仍记得那天晚饭时，我在加工蛋白质，核糖体因数学90外加头疼，双喜临门请假回家。噫，她...嗯，这边也挺好。第二天依旧平淡，但也不淡，核糖体找我借笔；interesting，她旁边不是有别的细胞器吗？
+ 课间和高尔基体聊天很是有趣；看这高尔基体的鬼样，满是囊泡和扁平囊，某细胞器家长评价像金丝猴...毕竟他还是太菜了，蛋白质这种东西都要深加工，不如我呀....所以，虽说都是单膜，但我仅需浅浅加工蛋白质，可见我高级之处。“新”电影那抓的上映也给我和他带来不少话题，化学题拿盐酸溶火尖枪也是把他笑得喷出了蛋白质。
+ 一周三节主课也不知啥意思，在主课和线粒体打乒乓球真是件美事。正是夏天，他的双膜结构让他汗如雨下，内膜向内折叠成的嵴更是让他难以散汗。我和他的反手日益精进，还记得在负一楼的表演球打得别有番趣味。中午去食堂，我与线粒体就要对付可恶的屎堂阿姨，他需要有氧呼吸，自然得吃很多。可恶的阿姨说什么初一的细胞器还要吃，我和线粒体就等，等到初一吃完再去加，没牧民族的阿姨就给我们加一勺沙鸥大豆油......
+于是乎，我与线粒体开始了连续一周的调查。你说初一要吃，好，我们等。初一散尽，我们去加菜；大勺的饭与零星的豆腐，真不错，那锅里剩的也不多了，因为她们自己也要吃呢，情有可原嘛。咦？那边角落的小推车已经堆满糠食，懂了。我便和线粒体跟踪小推车直达电梯口，也许是我一身囊泡，他双膜耀眼，阿姨质问我们干什么呢！哦抱歉，请您原谅，小推车八缸发动机的轰鸣声不是我等俗人小辈可欣赏的。线粒体与我死心不改，直奔一楼，看见铁栏杆里漂移的豪车运进后厨，只得关注一旁死角多多的所谓监控。满车推进小屋子，出来时车却空了，也许是菜自己躲进囊泡被运至细胞膜外了吧......
+ 直奔食堂后侧发现惊人内幕：鸡肉含量小于等于百分之五十的鸡米花、沙鸥转基因大豆油......原来食堂放那么多油不是因为有钱啊。这样的战斗持续了一个月之久，后来在细胞分裂前一个月时我曾两次上书，一次两千字，无果；另一次四千字，改变了一天之久！！！若有需要，我可以尽我所能回忆起以前所写的内容发出来。
+ 下课与高尔基体和叶绿体（这位是客串角色）聊天无非还是那些内容：榜一大哥哪吒、世界电车未来小米、不服碰一碰的播求以及一些伟人。叶绿体蛮有趣，有趣之人必有有趣之处，我、高尔基体、叶绿体都是单膜结构，有些时候一个小小的暗示便是我们十分钟的乐趣。叶绿体经常以小面包充饥，这些小面包就形成了（？）他体内的基粒，一大堆小面包外套着类囊体作为包装袋...传说人类科学家有说，叶绿体和线粒体可能是被细胞吞入的细菌，在进入细胞时又裹了一层膜,就成了双膜结构。我们三个细胞器的事没啥可讲也没胆去讲，便结束一会吧。
+ 核糖体借我的笔直到第二天才想起要还，她戳我时，说是还东西，索性便送她吧。那天后，我们之间的交流越来越多，哪来那么多话我也不记得了，毕竟我的光面内质网只会合成脂质这种不实在的东西。在我所剩无几的缓存中，仅找到一丁点内容，当时主要以题为由交流一下，毕竟蒟蒻只有在同为蒟蒻的细胞器身上找找存在感了。我呢主要是问她化学，她似乎没啥题目找我，竟找我聊起八卦来了。忘了啥时候了，她借我化学作业帮我检查（？），改正了我一处错误，那几个有特殊意蕴的化学式写在我的作业上，当时认为细胞分裂后这可能是我唯一留下的她的字了。虽说一般的细胞需要核糖体合成蛋白质，内质网加工运输给高尔基体，高尔基体主加工后运用囊泡送出细胞膜，可毕竟我们不是一般的细胞（还有叶绿体和液泡呢，液泡后面会出现），所以那些破事不在我们管的范围内，我与她就闲得很，常常说些有意思的。
+ 一周过去，倒计时哗啦啦的走，我有些恍惚，一百三十多这么快就八十多天了？amazing啊，我同桌是液泡，含大量见不得光的色素，细胞液里含有一些乱七八糟的，像什么糖无机盐蛋白质之类的。他总能保持 细胞 坚挺。和他做同桌很不错，因为他也是单膜，一语双关点破不说破...他熬夜能力自小就练，可以做到三点睡觉六点起床中午仅仅小睡一下。
+不出所料，每节课上重复的不是认认真真听讲，而是和液泡聊 有趣 的话题。还记得我和他曾在一张纸上写满了电影名，那几节课一直在笑，核糖体还想看？扯，这种东西见不得人。与液泡做同桌还可以一起上课写数学题，毕竟无聊的时候这玩意也就成了消遣。印象极深的是大瓶景田瓶盖处的提环被他卸下来，经他精细弯折，折成了个....不好说。
+ 我们的膜也不是摆设，在细胞里，我们的膜让我们内心稳定，运输物质、能量转化和信息传递必须依赖强大的内心啊；我们身上的那么多酶也是这么附着的，这些酶是消化知识所必需的；膜也让我们各自区分开，免得自己心里的屁事儿干扰到别人。
+ 但我也说过，线粒体的双膜与嵴让他打乒乓球格外热，我们刚才才在四楼‘冰场’打一会会他就浑身是汗，以致中午睡不了觉了。今天是美妙的星期六，所以放学我们会去外面打乒乓球，但也因细胞快分裂了，这次是最后一次出去，而且以后在细胞里学习时也不会怎么打了。
+ 死死盯着钟，疯狂计算细胞核还需讲多久、会不会拖堂，铃声响起，细胞核抱起一摞书，这意味着下课！我与线粒体背起早已准备好的包秒退。这天打的很好，有一球被线粒体评为‘至今最好一球’。
+ 很久没和高尔基体慢悠悠吃过饭了，所以这次中午与他一起在食堂聊，慢慢的聊。很久没这么慢的吃饭，其实慢下来也很好，说说话，这感觉就像是累了一天睡前听听歌、闷了好多天后与别的细胞器对正手或是一个走在上学的路上。高尔基体和叶绿体也是文曲星，我们就喜欢在一起说谜语，看似互相贬低问候家人，其实朋友不就是这样吗？
+ 体育课我下去没看到老师就偷偷回到教室，其实主要是想回来...核糖体总不上体育课躲教室里，真是懒啊，怪不得核糖体那么小。记得蛮清楚啊，我回来写英语卷子，她问我，有喜欢的人吗？真搞笑，肯定有啊。三思，我只得说我‘有过’。然后她*的说了好几节课有问题，我觉得，她也有问题.....后面几天她还常常试探，这些内容怎么方便讲呢？所以打住打住，聊聊别的。
+但...其实别的也没什么可说了，在细胞分裂倒计时最后50多天到时出了不少有趣的事，没必要都讲出来。时间拉到细胞分裂那些天。细胞分裂并不是件好事，大部分细胞器都留下了，可恶的中心体笑里藏刀，把我以及一些其他细胞器分到新细胞去。但是呢，交流多的那些细胞器都已不在身边，现在就只剩我一个呆在这无聊的地方。
+（现在也是...）
+            </div>
+        </section>
+
+        <!-- 清风无内容区域（统一样式） -->
+        <section class="content-section" id="section-empty-qf">
+            该栏目暂未添加内容，敬请期待。
+        </section>
+
+        <!-- 过往云烟文章区域 -->
+        <section class="content-section section-article" id="section-gwyy">
+            <h2 class="section-title title-red">《过往云烟》</h2>
+            <div class="article-content">
+云常常怀念他在初中的日子，仅在半年之前他还是个快乐的少年，渐渐地，他看向窗外的月，愁的滋味在他心底晕开。枕头震了震，朋友发来消息：出来聚会，我叫了所有的初中同学哦。他的嘴唇翘起，久违的笑了。
+ 不知谁，领着大家玩游戏，云自然是输了。几个人笑着，起哄让他穿JK拍照，然后发在网上。他的脸羞得绯红，推搡着不愿意穿。云生的面目清秀，皮肤光滑细腻看的比女生可爱，也就成了初中的班花，难看出是男生。大家推着、怂恿着，不知从哪翻出来一套衣服，明显是 早在预谋 。一杯杯鸡尾酒被灌下去，本就酒量不好的他抱着衣服迷迷糊糊的走向了卫生间。他捏着裙边，感受着这别样的材质，脸热得发烫，羞涩的笑了。理了下衣领，挽挽假发，看着镜中那个女孩子，一股别样的感觉涌上心头，好可爱呀。门被推开，闪光灯晃住了云的眼。很快朋友们把他的照片上传了，嘻嘻的笑着：云好可爱啊...云只希望那张照片无人理睬，也就算了。酒精上来了，云的眼糊了。
+ 深夜，烟无聊的翻着手机，想找找不定方程看着玩，突然，他的手停住了。一个女孩的眼睛吸住了他，那个女孩的眼神中满是羞涩与甜意，与其他矫揉造作的妖精可不同，烟已经被那个女孩吸引住了。烟给她发了句，好可爱。并未想多，看着天花板，却仍多想，想着那个女孩。
+ 云打开手机，发现竟然有人发来消息。可爱？云的脸又一次红了，写下又删除，犹犹豫豫，他终于回信说：我是男生，是游戏输了才被迫这样的.....没曾想，手指刚挪至左上角，对面发来：哈哈哈，看得出来你是被迫的，你是高几？叫你学妹还是学姐呢？学妹，学姐？云的心乱了，很想解释几句。
+ 烟：我叫烟，才上高二，你？
+ 烟：看得出来你和其他女孩不同...
+ 云彻底乱了，但和烟聊着聊着也就忘了澄清自己是男孩子的事。云发现，他和烟有很多很多共同点，有很多可说的话。烟身上的一种感觉也让云有点别样的情愫。云渐渐不想失去这个朋友，轻咬着自己的嘴唇，他也就无所谓了对面认为自己是女生。
+ 烟：你那边冷吗，快十二月了，记得加衣服。[微笑]
+ 云：嗯。
+ 烟：你知道吗，再过几个月，樱花便开了，我们去看吧。
+ 云：消息已撤回
+ 烟：嗯？
+ 云：我说，可以呀。
+ 烟：云，我喜欢你，你，看得出来吗？
+ 看到这条，云怔住了。烟？不，我并不希望失去这个朋友...不行，我是男孩子啊，忘了和他说了。那要是说了，他会不会认为我在耍他？他那么懂我，我也依恋他...那我就，就随着他吧...
+ 烟期待着，害怕着，手指随意的上下滑动屏幕，等着那一句
+ 云：烟。我也喜欢你，
+ 烟也怔住了，我谈恋爱了？这已经是最棒的高中生活了。烟依旧没缓过来，盯着那几个字。“喜欢你”是有分量的字，是的，拥有你就，拥有全世界.....
+ 烟：我，还能看看你的照片吗？
+ 烟：云？
+ 烟：消息已撤回
+ 烟：对不起，我冒昧了。
+ 云慌了，但他从柜子里面掏出上次那套JK和假发，简单打扮下，就已经出落得很漂亮了。这样好吗？云犹豫了，但他又想，我还想和他当朋友，我还想...我离不开他。
+ 云：[图片]
+ 云等着他的回复，怕烟说些什么。
+ 烟：那，我是不是应该改口，我们重新认识。
+ 烟：女朋友.
+ 云的思绪飘走了，他心中最柔软的地方被触动，抱了抱胸口的被子，腿也不安地扭了扭。
+ 烟经常说些让云害羞的话，诸如：
+ 亲你...
+ 云想，你总欺负我脸皮薄，哼...矫情的云常常冲烟撒娇，烟很喜欢回味云的每句话，然后傻傻的笑着，在脑中描摹着女朋友的模样。
+ 烟想突然找到云的学校，给她一个大大的惊喜。于是乘着月色，他从别处飞往云的城市。毕竟放假了，烟的家长也支持他自己出去旅游，烟就到了。保安管的并不多，烟很轻松的进去了。顺着云在网上描绘的样子，他很轻松找到云的班。不远处站着个学生，他的身子很像云：你好，你认识云吗？旁边一个人笑着说，你扯住的人就是啊。
+ 云扭过头，他惊呆了，没想到烟会来，直接找到他....云的眼泪在打转。他害怕烟生气，他害怕失去烟，失去他的朋友，失去他的...哽咽着，云解释说：我不是故意的...我害怕，我害怕，我怕我失去你。烟并不生气，他的眼底透着一丝温柔，仍旧充满着情感。烟搂住云的腰：你知道错了？没事的，我的.....云不再哭了，脸偏向一边。烟温柔地说：脸偏过来。云怔怔的，把脸转过去。猛然间，烟的脸贴上去，嘴唇贴在一起，轻轻旋了三十度，时间凝固，风撩起云的刘海，烟给了云一个深深的吻，他们俩的初吻...慢慢的，两人把脸分开，
+烟说：走吧，去你家。
+我家？
+总不能睡在学校吧...
+背后的灯，城市的霓虹，映着他俩人的背影，模糊，消散......
+            </div>
+        </section>
+
+        <!-- 星月夜文章区域 -->
+        <section class="content-section section-article" id="section-xyy">
+            <h2 class="section-title title-red">《星月夜》</h2>
+            <div class="article-content">
+夜空中最亮的星星，是月亮的，对吧？
+星从小就招人喜欢，她的眼睛里仿佛确实透着星光，一举一动都很可爱；等到了中学，依旧小巧的她招来许多人的倾慕，她的心里却觉得烦。
+开学了，她抱着一大摞书跑来跑去，却撞到了月。月在女生中长得算高的，优雅的举止中尽是御姐气质。她被撞歪在一边，但并没说什么，很快帮星捡起地上的书，杂七杂八的书里，甚至连月也喜欢学的 [数据删除] 都有。
+“额” 星慌了神，脸涨得泛红，手停在空中不知所措地比划，“对不起，你受伤了吗？”
+星的样子把月看笑了，可这让星更慌了。月连忙告诉她，并没有什么事，心里也对这个可爱的女孩留下了印象。
+“很高兴认识你，你是叫‘星’吗？你的名字和你一样，清澈，挺可爱的...”
+星虽脸红了，但她很高兴第一天能认识一个朋友。巧的是，她俩的座位在一起，第一天就说了很多话。月比星大近一年，所以星喜欢叫她姐姐。星很少能交到这么好的朋友，所以总爱跟月扒拉在一起，抓着月的手不肯放开。月也就索性反抓过星的手，一甩一甩的，觉得好玩。要是说到什么把星惹羞了，她常会抱着月的胳膊撒娇；要是把月说羞了，月就轻轻薅星的头发 —— 因为她的头发真的好香、好软，像是轻柔的花瓣，引得月总爱凑上去闻。
+放假的时候，两人的 QQ 从没闲着。她们一开始喜欢互相发些有趣的表情包，或是月给星分享自己喜欢的小说，星会认真地把每本小说读完，因为它们确实好看，也因为..... 这毕竟是月给的嘛... 月渐渐也离不开这个粘人的小东西了，虽然.... 但她真的好可爱、好招人喜欢啊。
+月：你有过喜欢的人吗？
+星：嗯... 没有呀，没想过这些。
+月：[唐人表情]
+这几天聊天后，总勾得星望向窗外，口中喃喃地念着‘月’；仿佛是量子超距作用一般，月也会望着窗外，看着与星欣赏的同一片夜色。夜色，也许确实因为她们，变得更纯粹、更绚烂了。
+一起在操场上散步的时候，月喜欢盯着星的笑脸，那灿烂的笑容，确实像天上的星星一样，能抵达她的心灵深处。星有时光是看着月，就会傻傻地笑，觉得自己黏上了月，越来越离不开她了。
+“呐，你看到蒲公英了吗？你知道蒲公英的花语吗？”
+星听得愣愣的，弯下身子，小心地捧住一撮飘着的蒲公英，呆呆地笑。良久，她盯着蒲公英，头也不抬地问：“不知道呀，你知道吗？”
+“我也不知道.... 那.... 我们也能像风与蒲公英一样永远在一起吗？”
+星痴痴地笑了，往前跑了几十米，又回过头像月招手：“姐姐，那我们把蒲公英送得更远吧！”
+那一晚的星空格外特别，满天繁星在打转，圆月的光照着她二人的侧脸。星怯怯地问了句：“月，所以，你不光是我的姐姐？” 月没说话，而是牵起星的手 —— 只不过这次，她们是十指相扣，都感受着彼此的温度。
+第二天月一到学校，星就送给她一小幅画，画的是一棵樱花树，满纸的粉嫩触动了月的心。她从后面抱住星，凑近她的耳根说：“那我们一起去看吧，浑身洒满樱花的你，一定会很可爱的。” 星嘻嘻地钻进月的怀里，与她紧紧抱在一起，笑个不停。
+等到真去看樱花的那一天，春天的风轻柔和缓，吹得樱花簌簌飘落，也抚摸着星与月的脸颊。星的脸一定是被樱花映得粉粉的吧，月怀着别样的情愫，望着星可爱的样子。终于，月忍不住了，把星按在旁边的樱花树上。这冷不丁的举动让星轻哼了一声，却也只哼了半声 —— 因为此刻，月的唇已经覆上了星的唇呀～
+风稍稍大了些，吹起二人的刘海，与漫天花瓣缠在一起，泛着她们独有的香气呢...
+            </div>
+        </section>
+
+        <!-- 鼻子文章区域 -->
+        <section class="content-section section-article" id="section-bz">
+            <h2 class="section-title title-red">《鼻子》</h2>
+            <div class="article-content">
+     某月某日，WGSZ出了一件非常古怪的事。在4-404的信息竞赛教练hjz，一清早就醒了，闻到一股热面包的香味。他在躺椅上欠起身来，看见旁边的学生，一个喜欢喝咖啡、举止怪异的男孩，面前摆着刚烤好的面包。
+ “唉，今儿我不去接水冲咖啡喝了，” 黄敬哲说，“我想吃块热面包夹葱。”
+ （其实hjz两样都想吃，只是他心里明白，同时要两样是办不到的，因为他学生最讨厌这种贪嘴的怪毛病。）
+ “让这傻瓜吃面包去吧，” 学生暗地里想，“这样我倒可以多喝一杯咖啡了。” 他就把一个面包往桌上一扔。
+ hjz为了舒服，在头上带个耳机，在桌旁坐下，撒了点盐，备好两个葱头，拿起刀子，装出一副深谋远虑的样子，动手切面包。他把面包切两半，往中间一看，不由得大吃一惊，里面有个发白的东西。hjz小心翼翼地用刀子拨了拨，又用手指摸了摸。
+ “硬邦邦的，” 他自言自语，“这是什么玩意儿？”
+ 他伸进指头一拽，拉出来的竟是个鼻子！他顿时泄了气，垂下手来；揉了揉眼睛，再一摸 —— 千真万确，是鼻子！而且看上去还挺面熟。他脸上露出了惊恐的神色，可这跟学生那欣喜若狂的神情比起来，简直算不了什么。
+ “你这有趣的家伙，从哪儿割来的鼻子？” 学生笑道，“伟人！我要亲自到班上赞扬你去！我已经听过三个学长说，你与某流氓交谈的时候，总是死命揪人家的鼻子，几乎要把鼻子给揪下来了。”
+ 他早已吓得魂不附体。他一眼就认出，这鼻子正是他每天都要去伺候的金牌教练wjq的。
+ “得了，***，” 他说，“我用破布把它包起来，放在墙角，先搁一搁，待会儿再拿出去。”
+ “我才不听你这套！” 学生嚷道，“想让我把割下来的鼻子留在屋里？你这谦虚的东西！整天就知道戴着耳机敲代码，反抗精神都快忘光了，你这无懦夫，弱鸡！你以为我会替你保密吗？快拿出去！展示给我的朋友看，别让我再看到它这么不受待见！”
+ 他呆若木鸡地站着，脑子里一片空白。
+ “真邪门了，” 他搔着后脑勺说，“我昨天难道14.00没睡醒不成？可这实在说不通啊，面包是烤过的，鼻子却完好无损，我真是弄不明白！”
+ 他越想越怕，一想到崇拜者们要是在他机房里欣赏这鼻子，自己就得出大名，就浑身发抖。他仿佛已经看见学生那绣着银边的校服和明晃晃的手机了。他赶紧穿上外套，在学生的一片怂恿声中，用破布裹起鼻子，匆匆跑出了机房。
+ 他想找个地方把鼻子偷偷扔掉，要么塞到大门口的八百年前的“奥林匹克常青树”石头底下，要么趁人不注意丢在地上，然后赶紧钻进小路溜走。可他运气太差，一路上总碰到熟人，不是问他 “去哪儿啊”，就是问他 “这么早给谁上课去”，让他根本没机会下手。有一回，他好不容易把鼻子扔在地上，可一个保安老远就用手指着他，喊道：“捡起来！你掉东西了！” 他只好又把鼻子捡起来，揣进怀里。眼看走廊的教室陆续开课，行人越来越多，他彻底没辙了。
+ 最后，他决定去小亭子，想办法把鼻子扔进臭水沟里。不过，我得先介绍一下hjz，其实他在很多方面还算个不错的人。
+ hjz和所有正派的中国信竟老师一样，惜时如命。他天天给别人上课，自己总找机会多睡一会。他那台笔记本电脑早已磕地破破烂烂，原本的米黄色变成了棕黄和银色相间的斑纹，边缘油光锃亮，三个按键也破了，只剩几根电线挂着。他还爱耍贫嘴，每次wjq抱怨：“喂，那个***在成绩掉了，该停课。” 他就会反问：“是吗？” 等对方说 “我就这么说，反正就是不行”，他就会掏出手机看看，然后随心所欲地在wjq的背后暗笑某高二学生骂wjq傻*，算是报复。
+ 闲话少叙，这位老师已经来到了小亭子上。他先四处张望了一番，接着俯在栏杆上，装作看河里有没有鱼，趁机把包着鼻子的破布扔了下去。卸下这千斤重担，他顿时觉得浑身轻松，甚至忍不住笑了起来。他也没心思去给学生们上课了，径直走向挂着 “WGSZ营养广场” 招牌的屎堂，想喝杯水。可就在这时，他看见一头站着一位领导，身材魁梧，满脸络腮胡子，头戴卫衣帽。他吓得魂飞魄散，而领导已经朝他招了招手：“你过来一下！”
+ 他连忙摘下便帽，快步上前，恭敬地说：“尊敬的领导，您好！”
+ “别来这套，小子，” 领导说，“你刚才在桥上干什么呢？”
+ “实话实说，老爷，我是去给人上课，路过这儿，顺便看看河水臭得快不快。”
+ “撒谎！你瞒不过我，老实交代！”
+ “大人，我愿意每天伺候您两次，不，三次也行，不要奖金！” 他急忙讨好道。
+ “少来这套！有三个老师求着给我擦鞋，他们还觉得是天大的荣幸呢。快说，你到底在亭子上干什么？”
+ 他的脸瞬间变得惨白…… 接下来的事情就变得扑朔迷离，没人知道到底发生了什么。
+ 金牌教练wjq一大早醒来，嘴里习惯性地发出 “嘟噜噜” 的声音，他自己也说不清为什么要这样。他伸了个懒腰，关掉电脑上的小网站，拿起手边的小镜子。他原本是想看看昨晚鼻子上长出来的那个小疖子，可镜子里的景象让他目瞪口呆 —— 鼻子不见了，原来长鼻子的地方只剩下一块平平的疤痕！
+ wjq吓得不轻，赶紧叫人端来水，用毛巾擦了擦眼睛，再看 —— 鼻子真的没了！他掐了自己几把，想确认是不是在做梦，可疼痛感清清楚楚。他猛地从床上跳起来，浑身一阵乱抖，可鼻子还是不见踪影。他急令可怜的学生赶紧给他穿好衣服，随后便飞奔着去保安室找保安。
+ 这里得介绍一下wjq，让大家知道他是个什么样的金牌教练。金牌教练分两种，一种是靠教学生拼实力得来的，另一种是学生间调侃时所说“自他一来再也未出金牌”的，这两种人可大不相同。天天带队出去训练的河南流氓wjq就属于后一种，他获得这个称号已经多年，所以整天把它挂在嘴边，还总爱把自己称作金牌教练。
+ “大婶，” 他要是在屎堂碰到卖馒头的阿姨，就会说，“你到四号楼四零三机房找我，就问金牌教练wjq在哪儿，没人不知道。” 要是碰到有点姿色的女人，他还会额外加一句：“宝贝，你打听金牌教练wjq就行。” 所以，我们后面也姑且称他为金牌教练吧。
+ 金牌教练wjq一路狂奔，可路上连辆学生的自行车都找不到。他只好把斗篷裹得更紧，用口罩捂住脸，装作看完片流鼻血的样子。就在这时，他看见一个大门口停下一辆豪车，一位身穿制服的CCF领导从车上下来，快步跑上台阶。wjq定睛一看，吓得差点瘫倒在地 —— 那位领导竟然是他的鼻子！
+ 没过两分钟，鼻子从屋里出来了，脖子上挂着红牌牌，一看就知道是CCF来的领导。它身穿西装，配着小领带，腰里戴着皮带，看样子是要出门赴宴。只听它对司机吩咐了一句 “去**餐厅”，便上了马车。
+ wjq气得发疯，拔腿就追。豪车很快到了餐厅，他冲进餐厅，看见鼻子正站在一边收纸包、茅台。他心里犯起了嘀咕：“我该怎么跟它开口呢？它可是CCF领导，比我的地位高多了。不过我可是竞赛教练啊，怕什么。”
+ 他犹豫了半天，终于鼓起勇气，轻轻咳嗽了一声。鼻子转过头来，问道：“您有什么事吗？”
+ “尊敬的大人，” wjq结结巴巴地说，“我有件事想跟您请教。您肯定清楚自己的身份…… 我是说，您怎么会出现在这儿呢？您本该待在我的脸上才对呀。您想想，我一个金牌教练，出门没鼻子像什么样子？要是个小初中生也就罢了，可我还要跟女老师们打交道，比如正高级教师六六六太太，还有她的女儿…… 您要是不回到我脸上，我可就毁了。”
+ 鼻子皱了皱眉，说：“我不明白您在说什么。您认错人了吧？我可是CCF领导，有自己的职责和身份。” 说完，它便转身继续收礼，再也不理wjq了。
+ wjq碰了一鼻子灰，只好沮丧地离开餐厅。他心想，或许该在CCF上登个寻人启事。他找到人，可一想到要写下 “寻找本人的鼻子” 这种荒唐事，又觉得实在丢人。最后，他还是硬着头皮说明了情况，可CCF的职员却笑着告诉他，这种启事根本没人会信，还劝他不如登条广告，说愿意出重金赎回。wjq无奈，只好悻悻地离开了。
+ 他又去了CCF主席的办公室，可主席大人正忙着打牌，根本没心思听他说话，还嘲讽道：“你肯定是在哪儿带队打比赛，把鼻子给弄没了吧？等我打完这把再说。” wjq碰了一鼻子灰，只好回家了。
+ 回到机房，wjq越想越伤心。他看着镜子里自己那扁平的脸，想到以后再也没法跟那些美女们周旋，就忍不住哭了起来。就在他悲痛欲绝的时候，门铃响了。
+ 门口站着一位保安，手里拿着个纸包。“您是金牌教练wjq吗？您是不是丢了鼻子？”
+ “是啊！是啊！” wjq激动得跳了起来。
+ “我们把它找回来了。” 保安说着，打开纸包，里面正是他的鼻子。原来，鼻子在乘豪车的时候，被巡警发现形迹可疑，仔细盘问后，才知道它的来历。
+ wjq欣喜若狂，连忙接过鼻子，可新的问题又来了 —— 他怎么也没法把鼻子粘回原来的位置。他试了各种办法，用胶水粘，用绷带缠，可鼻子要么掉下来，要么歪到一边，怎么都不合适。他急得团团转，只好去请教医生，可医生们也都束手无策，还劝他别胡思乱想，好好休息。
+ 就在wjq绝望之际，事情突然出现了转机。一天早上，他醒来后习惯性地摸了摸脸，惊喜地发现鼻子竟然好好地长在原来的位置上了！他高兴得放声大笑，连忙拿起镜子照了又照，鼻子不仅回来了，还跟以前一模一样。
+ 他立刻穿上最体面的衣服，出门瞎转。看到学生不干正事，他都特意背起手，生怕别人没看到他的鼻子，然后说：“你还有三次机会。”当他再次遇到那个卖馒头的阿姨时，又像往常一样炫耀道：“大婶，到四号楼四零三找金牌教练wjq，没人不知道！”
+ 至于hjz，据说后来因为不好好敲代码被制裁了。伟大的金牌教练wjq，依旧像从前一样，每天忙着参加各种比赛，和女人们调情，仿佛那场离奇的丢鼻子风波从未发生过。只是偶尔，当他摸到自己的鼻子时，还会想起那段荒诞的经历，心里不由得泛起一丝莫名的滋味。
+            </div>
+        </section>
+
+        <!-- 竞选CCF主席文章区域 -->
+        <section class="content-section section-article" id="section-jxCCF">
+            <h2 class="section-title title-red">《竞选CCF主席》</h2>
+            <div class="article-content">
+几个月以前，我被提名为WGSZ 4-404的CCF主席候选人，与wjq和qjw竞选。我总觉得我有一个显著的长处胜过这两位伟大的金牌教练，那就是 —— 声望还好。从学生评价上很容易看出，即令他们曾经知道保持名誉的好处，那个时候也已经过去了。近几年来，他们显然对各式各样可耻的诸如看片的罪行都习以为常了。但是正当我还在赞美自己的长处，并暗自因此得意的时候，却有一股不愉快的浑浊潜流 “搅浑” 我那快乐心情的深处，那就是 —— 不得不听到我的名字动辄被人家拿来与那些畜生相提并论地到处传播。我心里越来越烦乱。后来我就写信给我的朋友，报告这桩事情。他的信回得又快又干脆。他说：
+你生平从来没有在OI圈子干过一桩可羞的事情 —— 从来没有。你看看洛谷吧 —— 你看一看，要明白wjq和qjw这两位前操古人后入来者的金牌教练是一种什么人物，然后想一想你是否情愿把自己降到他们的水平，和他们公开竞选。
+我也正是这么想呀！那天晚上我片刻也没有睡着。可是事已至此，我究竟无法撒手了。我已经完全卷入了漩涡，不得不继续这场斗争。早餐时，我无精打采地翻着洛谷，忽然发现下面这么一个帖子，老实说，我从来没有那么吃惊过。
+抄袭罪—— xzr先生现在既然在大众面前当了CCF主席候选人，他也许会赏个面子，说明一下他怎么会在二零二五年在洛谷月赛被四十四个证人证明犯了抄袭罪，且他的账户已经成了棕名。那次抄代码的意图是要从这个极难的Div-4等级比赛中混少得可怜的等级分，那是洛谷网站中可怜的小学生唯一可以找到存在感的比赛。xzr先生应该把这桩事情交代清楚，才对得起他自己，才对得起他所要求投票支持他的那些广大OIer。他是否会照办呢？
+我觉得我简直诧异得要爆炸了，这样残酷无情的诬蔑！我一辈子连碰也没有碰过Div-4等级的比赛！棕名我连得到的机会也没有过！至于小学生，我简直就不知道他们和一只田鼠有什么区别！我真不知道怎么办才好。我简直弄得神经错乱，不知所措。我只好把那一天混过去，根本就没有采取任何步骤。第二天早上，领一个帖子上登着这么一条（别的什么也没有）：
+耐人寻味—— 大家都会注意到，xzr先生对于那桩Div-4洛谷月赛的抄袭案保持缄默，似有隐衷。
+（附注 —— 从此以后，在竞选运动期中，这一类帖子一提到我，唯一的称呼就始终是 “无耻的棕名作弊者xzr”。）
+其次是《NOI官网》，上面登着这么一段：
+敬请说明—— 新任主席竞选人可否将下述事实经过向全国若干迫切等待着给他投票的OIer赐予说明，以释群疑？他在某直辖市某大学的时候，和他同在一个机房里的同学们时常遗失一些小小的贵重物品，后来这些东西通通在xzr先生身上或是他的 “乒乓球拍拍套”（他用来包裹一个两面粘着海绵与破胶皮的木板的套子）里找到了。于是大家为了帮助他改过自新、重新做人，就不得不对他进一番友谊的忠告，所以就给他安置在凸凹模前，盖上毯子，让他吃 “坦克压过” 的苦头，然后就叫他永远离开他在这个学校里所占的位子。这究竟是怎么回事，他可以说明一下吗？
+世间还能有比这更居心险恶的事情吗？我是一辈子没有去过某直辖市也没有被坦克压过的。
+（从此以后，这个网站就照例把我叫做 “某直辖市的小偷xzr”。）
+于是我渐渐对网站有了戒心，一拿起来就觉得提心吊胆 —— 很像一个人想爽的时候去打开手机，可是脑子里却担心会有人进来似的。有一天，我又看到这么一段：
+谣言被揭穿了—— 根据青山区的666先生和114先生及514先生三人宣誓负责的证词，现已证明xzr先生诬蔑我WGSZ德高望重的领袖已故的祖父，说他是因犯AI舞弊罪被禁赛终生的。这种卑鄙的说法是一种下流的无端的谣言，连丝毫事实根据的踪影都没有。像这样毁谤九泉之下的死者并以谰言玷污他们的名声的无耻手段，竟被人用以博得竞选上的成功，这实在叫正人君子看了寒心。我们想到这种卑鄙的谣言给死者清白的家属和亲友们必然带来的悲恸时，几乎激动得要把受了污蔑和侮辱的OIer们鼓动起来，采取断然行动，对诽谤者xzr施行非法的报复，比如砸了他在学校机房的破电脑。但是我们不这么办！还是让他去受到洛谷大凶的报复而苦痛吧。（不过神犇们如果让感情的冲动占了上风，在盲目的愤怒支配之下竟至对诽谤者加以人身的伤害，显而易见，考官是不能给这些激于义愤的人们定罪的，CCF也不能对他们加以处罚。）不像可敬的WGSZ教育推动者wjq，他只会穿着优雅的拖鞋在不开灯的封闭的机房里敲代码，顶多警告别人的学生上课玩游戏：“你还有三次机会”，然后背着手晃两晃。
+末尾一句巧妙的话居然大起作用，当天夜里就有一群 “受了污蔑和侮辱的OIer” 从我的机房前面冲进来，把我吓得连忙从座位爬起来逃出去。那些人满腔义愤，来势汹汹，一进门就捣毁了我以及我同学clr、hzx等人的电脑，走的时候把能带走的财物（包括我敬爱的老师黄敬哲的蓝色小水杯）都拿去了。但是我可以把手按在《深基》上发誓，我从来没有诽谤过那位领袖的祖父。不但如此，直到那一天为止，我还从来没有在NOIP获奖名单上见过他他，也从来没有提过他。
+（我要顺便说一声，从那以后，上面所引的那个报纸就把我称为 “AI舞弊犯xzr”。）
+其次一条引起了我的注意的报告是这样说的：
+好一个体面的候选人—— xzr先生原定于昨晚在赛前经验交流时作一次中伤wjq先生和qjw先生的演说，但是他因怯弱不曾到场！他的朋友用洛谷发来私信，说他犹豫不决，结果在路上被进击的奶牛撞了，腿上10e6处受伤 —— 伤者在地上躺着，非常苦痛，如此这般，还编了一大堆这类的谎话。404机房的学生们极力要把这种卑鄙的托词信以为真，故意假装着不知道他们所提名为候选人的这个花天酒地的浪荡子弟没有来的真正原因。昨晚上分明有人看见一个人被超级马里奥问题折磨得不成样子，一歪一倒地走进xzr先生所在的404机房。他的同学们有不容推卸的义务，应该赶快证明这个可怜蛋并非xzr本人。我们终于把他们难住了！这件事情是不容避而不谈的。OIer的呼声响雷似的要求回答，“那个人究竟是谁？”
+当真把我的名字牵连到这个不名誉的嫌疑上面，一时实在令人难以置信，绝对难以置信。我已经整整三年没有写过紫色以下的题目了。
+（现在我说起当初看到自己在那个报告的下一期上被人确信地加上 “信竞乐子xzr先生” 的诨名，竟能毫不感到苦恼 —— 虽然明知那个报告会要坚持不变地继续这样称呼我，一直到底 —— 这就足见当时的环境对我起了多大的作用。）
+这时候匿名私信逐渐成为我所收到的私信中的重要部分，普通的方式是这样的：
+被你从你的机房门口一脚踢开的那个请教问题的小学生现在怎么样了？
+爱管闲事的某w某j某q 启
+还有这样的：
+你干的事情，有些是除了我一人而外谁也不知道的。你最好识相一点，快给鄙人拿出让出位置来，要不然就会有一位大爷对你不客气，在报告上给你过不去。
+某q某j某w 敬启
+大致的意思总是这样。如果需要的话，我可以继续举出许多例子，直到读者发腻为止。
+不久，403的主要报告又给我 “判了罪”—— 大规模的例如吃了同学给的小零食的贿赂行为；而403机房金牌教练wjq的专用小网站则将一桩大事渲染的票长案硬栽到我头上。
+（就是这样，我又获得了两个称号：“肮脏的贪污分子xzr” 和 “可恶的卖银者xzr”。）
+这时候舆论鼎沸，叫我 “答复” 对我提出的那一切可怕的举报，以致我们404机房里的老师和同学们都说我如果再保持缄默，那就会使我在计算机领域上垮台。好像是要使控诉更加显得有劲似的，就在第二天，国家某官网上又登出了下面这么一段：
+注意这个角色—— WGSZ 4-404机房的候选人还在保持缄默。
+所有的舆论都一致同意这一点，他们都向我开火，叫我答复，弄得我满网风雨，无处藏身。我没有办法，只好照着办。我准备好一份帖子，想要把所有的控告都逐条驳斥，我在网站上登出了这份声明。但是我一夜之间，所有的键盘侠都向我敞开火力，他们的那些文章都充满了冷嘲热讽，把我的声明说成是一派cin<<与cout>>，挖苦我那些声明就像int不堪一击，并且讽刺我竟然不敢直面指控。我放弃了，我再也没有办法了。随后，有一个新的控告又来了，这个控告真的把我打垮了。
+道德败坏的典型—— 据可靠消息，xzr先生曾犯有重婚罪，他同时拥有一位在教室一角的妻子和一位在教室另一角的丈夫。他的恶劣行径实在令人不齿，不仅重婚还是男同，相比只会看片的wjq差了不少。这样的人竟然也妄图成为CCF主席，统中国的计算机领域，实在是对全国程序员的一种侮辱。
+这一下我完全垮了。我再也无法忍受了。我只好放弃竞选。我怀着怨恨的心情，在国家管网上登了下面这么一则声明：
+我退出竞选。因为我被指控犯有作弊罪、偷窃罪、诽谤罪、没实力罪、贿赂罪、卖银罪以及重婚罪，我认罪。我之所以退出，是因为我确实没有办法拿出自己清白的证据，同时我也厌倦了这种无休止的指控和污蔑。此外，我也确实娶了不止一位妻子和丈夫。我特此宣布退出竞选某国计算机协会主席。
+---熊子瑞
+就这样，我告别了竞选的舞台，也告别了那些所谓的 “善良” 金牌教练wjq和同人不同名的qjw。
+            </div>
+        </section>
+
+        <!-- 金牌教练之死文章区域 -->
+        <section class="content-section section-article" id="section-jplj">
+            <h2 class="section-title title-red">《金牌教练之死》</h2>
+            <div class="article-content">
+在一个挺好的傍晚，有一个同样挺好的信息金牌教练，名叫wjq，坐在会议厅第二排，用笔记本电脑看片。他凝神瞧着，觉得性福极了。可是忽然间，他原本就皱得像猴子的脸皱起来，他的小眼睛不见了，他的呼吸止住了…… 他从把视线从小电影上转移，弯下腰去，于是……“阿嚏！”
+wjq一点也不慌，他拿手擦了擦脸，而且照有礼服的人那样，往四下里看一看：他的喷嚏究竟搅扰别人没有。可是这一看，他却慌起来了。他看见坐在他前面正厅第一排的一个小老头正在拿手套使劲擦自己的秃顶和脖子，嘴里嘟哝着。wjq认出那个小老头是[数据删除]，在某国计算机协会任职的主席。
+“我把唾沫星子喷在他身上了，” wjq想，“他是我的上司，虽然不认识，不过那也还是很难为情。我得像口他一样道个歉才对。”
+wjq咳了一声，把整个身子向前探出去，凑着主席的耳根小声说话：“对不起，大人，我把唾沫星子溅在您身上…… 我一不小心……”
+“不要紧，不要紧。”
+“看在OI传统的份上，原谅我。我…… 我不是故意要这样。”
+“操，你他妈坐好吧！让我开会！”
+wjq窘了，他傻头傻脑的猥琐地微笑，接着看片。他看啊看的，可是不再觉得性福了。他开始凄凄惶惶，定不下心来。在贤者时间，他走到CCF主席跟前，在他身旁走着，压下自己的羞怯，喃喃地说：“我把唾沫星子喷在您身上了，大人…… 原谅我…… 您明白…… 我其实有意……啊不，无意......”
+“你妈的滚，够啦…… 我已经忘了，你却说个没完！” 主席说，不耐烦地撇了撇怨的嘴唇。
+第二天wjq穿上新拖鞋，理了发，当然是他最爱的蘑菇头发型，上主席办公室里去解说。他一走进主席的接待室，就看见那儿有很多来花钱买省队名额的人，主席本人夹在他们当中，正在跟他们讨价还价。主席问了好几个请托事情的人以后，抬起眼睛来看着wjq。
+“昨天在**会议室，要是您记得的话，大人，”伟大的、盖世的、前操古人后入来者的河南老流氓兼金牌教练wjq开口谈起来，“我打了个喷嚏…… 不小心喷了您…… 请原……”
+“真是他妈扯淡，这也太不像话啦！”
+“他不肯多话，” wjq暗想，猴子般的脸白了。“这是说，他生气了。不行，不能照这样了事，我要跟他说明白才行。”
+等到主席跟最后一个来花钱买省队名额的人谈完话，正要走进内室去，wjq就走过去，跟在他后面，喃喃地说：“大人，那件事不是故意做出来的，请您开恩相信我的话才好。”
+主席做出愁眉苦脸，摆了摆手：“无所吊谓，你妈的简直是跟我开玩笑，蠢货，” 他说完，就走进去关上他身后的门。
+“这怎么会是开玩笑？” wjq想，“根本就没开玩笑的意思呀！他是主席，可是他竟不懂。既是这样，我也不愿意再对这个摆架子的人赔不是了！滚他的！我给他写信好了，可是我再也不来了。皇天在上，我说什么也不来了。我她妈再来就去日本拍片，我发誓！！！”
+wjq这么想着，走回家去。给主席的信，他却没写成，他怎么也想不出来该写些什么话好。他只好第二天再亲自去解释。
+“昨天我来打搅大人，” 他喃喃地说，这时候主席抬起询问的眼睛来望着他，“可不是照您所说的那样是为了您的玩笑。我是来赔罪，因为我在打喷嚏的时候喷了您一身唾沫星子……”
+“你妈的标子，滚出去！” 主席大叫一声，脸色发青，周身打抖。
+“什么？” wjq低声问道，害怕得周身发麻。
+“滚出去！” 主席又说一遍，顿脚。
+wjq的高玩里好像有个什么东西翻腾起来，他什么也看不见，什么也听不见，退到门口，出去，到了街上，一路磨磨蹭蹭地走着。他信步走到机房里，也没脱掉制服，往沙发上一躺，就此…… 死了，连去日本拍片的承诺都没履行......
+            </div>
+        </section>
+    </main>
+
+    <!-- 补充缺失的密码弹窗HTML结构 -->
+    <div class="password-modal" id="pwdModal">
+        <div class="modal-content">
+            <h3>付费内容，付钱得密码</h3>
+            <input type="password" id="pwdInput" placeholder="密码">
+            <div>
+                <button id="confirmPwd">入</button>
+                <button id="cancelPwd">哟哟~</button>
+            </div>
+        </div>
     </div>
+ <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. 获取所有DOM元素
+    const navLinks = document.querySelectorAll('.nav-link');
+    const contentSections = document.querySelectorAll('.content-section');
+    const pwdModal = document.getElementById('pwdModal');
+    const pwdInput = document.getElementById('pwdInput');
+    const confirmPwd = document.getElementById('confirmPwd');
+    const cancelPwd = document.getElementById('cancelPwd');
+    const imagesLink = document.querySelector('[data-target="section-images"]');
+    const imagesSection = document.getElementById('section-images');
 
-    <!-- 文章页面（7个索引栏共用） -->
-    <div id="articlePage" class="page hidden">
-      <div class="header">
-        <h1 id="articleTitle">杠十细胞(残缺)</h1>
-      </div>
+    // 2. 默认显示首页
+    showSection('section-home');
 
-      <!-- 发布/编辑文章（新增id用于控制显示隐藏） -->
-      <div class="card" id="articlePublishCard">
-        <h3>发布</h3>
-        <textarea id="articleContent" placeholder="..."></textarea>
-        <div class="password-input">
-          <input type="password" id="articlePassword" placeholder="密码">
-        </div>
-        <button class="btn btn-primary" id="publishArticleBtn">保存</button>
-        <div id="articleMsg" style="margin-top: 10px; color: #8B2323;"></div>
-      </div>
-
-      <!-- 文章内容展示 -->
-      <div class="card" id="articleContentDisplay"></div>
-
-      <!-- 文章评论区 -->
-      <div class="card">
-        <h3>评论区</h3>
-        <div class="input-group">
-          <input type="text" id="articleCommentNickname" placeholder="输入文曲星大名">
-        </div>
-        <textarea id="articleCommentContent" placeholder="天青色等烟雨，评论区等你..."></textarea>
-        <div class="password-input">
-          <input type="password" id="articleCommentPassword" placeholder="密码">
-        </div>
-        <button class="btn btn-primary" id="publishArticleCommentBtn">发布</button>
-        <div id="articleCommentMsg" style="margin-top: 10px; color: #8B2323;"></div>
-        <div id="articleCommentList" style="margin-top: 20px;"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 加载LeanCloud国际版兼容的SDK（unpkg海外节点更稳定） -->
-  <script src="https://unpkg.com/leancloud-storage@4.19.0/dist/av-min.js"></script>
-  <script>
-    // ===================== LeanCloud国际版配置 =====================
-    const APP_ID = "Q21VZoZKN2avZM9vwmcBAF6W-MdYXbMMI"; 
-    const APP_KEY = "CFQrfORUFrboNxT9Xc5SHriw"; 
-    // 修复：国际版serverURL正确格式（避免连接失败）
-    const SERVER_URL = "https://q21vzozk.api.lncldglobal.com"; 
-    // =================================================================
-
-    // 全局标记：是否成功初始化LeanCloud
-    let leanCloudInited = false;
-    // 本地临时存储（备用：当LeanCloud不可用时，用localStorage存储数据）
-    let useLocalStorage = false;
-
-    // 初始化LeanCloud国际版（添加超时和错误处理，修复undefined报错）
-    async function initLeanCloud() {
-      try {
-        // 先判断AV是否加载（修复SDK未加载报错）
-        if (typeof AV === 'undefined') {
-          throw new Error('LeanCloud SDK未加载');
-        }
-
-        // 初始化国际版
-        AV.init({
-          appId: APP_ID,
-          appKey: APP_KEY,
-          serverURL: SERVER_URL
-        });
-
-        // 验证是否能连接到国际版（执行一个简单的查询，超时5秒）
-        const testQuery = new AV.Query('_User');
-        testQuery.limit(1);
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
-        await testQuery.find({ signal: controller.signal });
-        clearTimeout(timeoutId);
-
-        leanCloudInited = true;
-        console.log('LeanCloud国际版初始化并验证成功');
-      } catch (err) {
-        console.error('LeanCloud国际版初始化失败：', err);
-        console.warn('将切换到本地存储模式（数据保存在浏览器中，刷新后不会丢失）');
-        useLocalStorage = true;
-      }
-    }
-
-    // 定义数据表/本地存储工具
-    let Dynamic, Article, Comment;
-    // 本地存储键名前缀
-    const STORAGE_PREFIX = 'sar_darkweb_';
-
-    // 本地存储工具类（模拟LeanCloud的核心方法，修复undefined报错）
-    class LocalStorageModel {
-      constructor(type) {
-        this.type = type;
-        this.key = `${STORAGE_PREFIX}${type}`;
-      }
-
-      // 获取所有数据
-      find() {
-        const data = localStorage.getItem(this.key);
-        return data ? JSON.parse(data) : [];
-      }
-
-      // 根据ID获取数据
-      get(id) {
-        const list = this.find();
-        return list.find(item => item.id === id) || null;
-      }
-
-      // 保存数据（新增/更新）
-      save(item) {
-        const list = this.find();
-        if (item.id) {
-          // 更新
-          const index = list.findIndex(i => i.id === item.id);
-          if (index > -1) {
-            list[index] = { ...list[index], ...item, updatedAt: new Date().toISOString() };
-          }
-        } else {
-          // 新增
-          const newItem = {
-            id: Date.now().toString() + Math.random().toString(36).substr(2, 9) + Math.floor(Math.random() * 1000), // 增加随机数避免ID冲突
-            ...item,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            isProtected: false
-          };
-          list.push(newItem);
-        }
-        localStorage.setItem(this.key, JSON.stringify(list));
-        return this.get(item.id || list[list.length - 1].id);
-      }
-
-      // 删除数据
-      destroy(id) {
-        let list = this.find();
-        list = list.filter(item => item.id !== id);
-        localStorage.setItem(this.key, JSON.stringify(list));
-      }
-
-      // 根据条件查询（简化版，支持indexId和targetType/targetId）
-      findByCondition(condition) {
-        const list = this.find();
-        return list.filter(item => {
-          for (const key in condition) {
-            // 修复：类型统一（都转为字符串比较）
-            if (String(item[key]) !== String(condition[key])) {
-              return false;
+    // 3. 侧边栏导航点击事件
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault(); // 阻止默认锚点跳转
+            const targetId = this.getAttribute('data-target');
+            
+            // 如果点击的是好图区域，弹出密码框
+            if (targetId === 'section-images') {
+                showPasswordModal();
+                return;
             }
-          }
-          return true;
+            
+            // 其他区域正常显示
+            showSection(targetId);
         });
-      }
-    }
-
-    // 处理换行的工具函数
-    function formatContentWithLineBreak(content) {
-      if (!content) return '';
-      // 将换行符替换为<br>标签，同时转义HTML特殊字符防止XSS
-      return content
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;')
-        .replace(/\n/g, '<br>');
-    }
-
-    const PASSWORD_PUBLISH = "xzr110101100";
-    const PASSWORD_PROTECT = "Czmxzr20091228"; 
-
-    let currentArticleId = 1;
-    let currentArticleName = "杠十细胞";
-
-    // 页面初始化主逻辑（修复DOM加载顺序问题）
-    document.addEventListener('DOMContentLoaded', async () => {
-      // 第一步：初始化LeanCloud国际版
-      await initLeanCloud();
-
-      // 第二步：初始化数据模型（LeanCloud / 本地存储）
-      if (leanCloudInited) {
-        Dynamic = AV.Object.extend('Dynamic');
-        Article = AV.Object.extend('Article');
-        Comment = AV.Object.extend('Comment');
-      } else {
-        Dynamic = new LocalStorageModel('dynamic');
-        Article = new LocalStorageModel('article');
-        Comment = new LocalStorageModel('comment');
-      }
-
-      // 第三步：绑定索引栏点击事件（优先执行，确保能切换）
-      bindMenuClick();
-
-      // 第四步：绑定按钮事件
-      bindButtonEvents();
-
-      // 第五步：加载首页动态
-      loadDynamics();
     });
 
-    // 绑定索引栏点击事件（修复undefined报错）
-    function bindMenuClick() {
-      const menuItems = document.querySelectorAll('.menu-item');
-      // 先判断元素是否存在，避免undefined
-      if (!menuItems || menuItems.length === 0) {
-        console.warn('导航栏元素未找到');
-        return;
-      }
-
-      menuItems.forEach(item => {
-        item.addEventListener('click', () => {
-          // 切换active样式
-          menuItems.forEach(i => i.classList.remove('active'));
-          item.classList.add('active');
-
-          const id = item.dataset.id;
-          const name = item.dataset.name;
-
-          // 先判断元素是否存在，避免undefined
-          const homePage = document.getElementById('homePage');
-          const articlePage = document.getElementById('articlePage');
-          const backBtn = document.getElementById('backBtn');
-          const articleTitle = document.getElementById('articleTitle');
-
-          if (!homePage || !articlePage || !backBtn || !articleTitle) {
-            console.warn('页面元素未找到');
-            return;
-          }
-
-          if (id === 'home') {
-            // 切换到首页
-            homePage.classList.remove('hidden');
-            articlePage.classList.add('hidden');
-            backBtn.classList.add('hidden');
-            loadDynamics();
-          } else {
-            // 切换到文章页面
-            currentArticleId = id;
-            currentArticleName = name;
-            homePage.classList.add('hidden');
-            articlePage.classList.remove('hidden');
-            articleTitle.textContent = name;
-            backBtn.classList.remove('hidden');
-            loadArticle(id);
-          }
-        });
-      });
-
-      // 返回按钮事件（修复undefined报错）
-      const backBtn = document.getElementById('backBtn');
-      if (backBtn) {
-        backBtn.addEventListener('click', () => {
-          const homeMenuItem = document.querySelector('.menu-item[data-id="home"]');
-          if (homeMenuItem) {
-            homeMenuItem.click();
-          }
-        });
-      }
-    }
-
-    // 绑定按钮事件（修复undefined报错）
-    function bindButtonEvents() {
-      // 逐个判断按钮是否存在，避免undefined
-      const publishDynamicBtn = document.getElementById('publishDynamicBtn');
-      if (publishDynamicBtn) {
-        publishDynamicBtn.addEventListener('click', publishDynamic);
-      }
-
-      const publishArticleBtn = document.getElementById('publishArticleBtn');
-      if (publishArticleBtn) {
-        publishArticleBtn.addEventListener('click', publishArticle);
-      }
-
-      const publishArticleCommentBtn = document.getElementById('publishArticleCommentBtn');
-      if (publishArticleCommentBtn) {
-        publishArticleCommentBtn.addEventListener('click', () => {
-          publishComment('article', currentArticleId);
-        });
-      }
-    }
-
-    // ------------------------ 动态相关功能 ------------------------
-    async function loadDynamics() {
-      const listEl = document.getElementById('dynamicList');
-      // 先判断元素是否存在
-      if (!listEl) {
-        console.warn('动态列表元素未找到');
-        return;
-      }
-      listEl.innerHTML = '<p>加载中...</p>';
-
-      try {
-        let dynamics = [];
-        if (leanCloudInited) {
-          // LeanCloud逻辑：按时间倒序查询
-          const query = new AV.Query(Dynamic);
-          query.descending('createdAt');
-          dynamics = await query.find();
-          dynamics = dynamics.map(item => ({ ...item.toJSON(), id: item.id }));
-        } else {
-          // 本地存储逻辑：按时间倒序查询
-          dynamics = Dynamic.find().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        }
-
-        listEl.innerHTML = '';
-        if (dynamics.length === 0) {
-          listEl.innerHTML = '<p>暂无动态，快来发布第一条吧！</p>';
-          return;
-        }
-
-        // 渲染动态列表（每个动态附带完整评论区）
-        dynamics.forEach(dynamic => {
-          const item = document.createElement('div');
-          item.className = 'list-item';
-          item.innerHTML = `
-            <div class="meta">发布时间：${formatTime(dynamic.createdAt)}</div>
-            <div class="content">${formatContentWithLineBreak(dynamic.content)}</div>
-            <div class="action-btn">
-              <button class="btn btn-secondary" onclick="toggleDynamicCommentArea('${dynamic.id}')">
-                ${dynamic.commentAreaOpen ? '收起评论' : '查看评论'}
-              </button>
-              <button class="btn btn-${dynamic.isProtected ? 'secondary' : 'danger'}" onclick="toggleProtect('dynamic', '${dynamic.id}', ${dynamic.isProtected || false}, '${dynamic.id}')">
-                ${dynamic.isProtected ? '取消保护' : '保护'}
-              </button>
-              ${!dynamic.isProtected ? `<button class="btn btn-danger" onclick="deleteDynamic('${dynamic.id}')">删除</button>` : ''}
-            </div>
-            <!-- 动态评论区（默认隐藏，与文章评论区功能一致） -->
-            <div class="comment-area ${dynamic.commentAreaOpen ? '' : 'hidden'}" id="comment-dynamic-${dynamic.id}" style="margin-top: 20px; padding-top: 20px; border-top: 1px dashed #eee;">
-              <h4 style="color: #8B2323; margin-bottom: 15px;">评论区</h4>
-              <div class="input-group">
-                <input type="text" class="comment-nickname" placeholder="输入文曲星大名">
-              </div>
-              <textarea class="comment-content" placeholder="天青色等烟雨，评论区等你..."></textarea>
-              <div class="password-input">
-                <input type="password" class="comment-password" placeholder="密码">
-              </div>
-              <button class="btn btn-primary" onclick="publishComment('dynamic', '${dynamic.id}')">发布</button>
-              <div id="dynamic-comment-msg-${dynamic.id}" style="margin-top: 10px; color: #8B2323;"></div>
-              <div class="comment-list" id="comment-list-dynamic-${dynamic.id}" style="margin-top: 20px;"></div>
-            </div>
-          `;
-          listEl.appendChild(item);
-
-          // 加载该动态的评论
-          loadDynamicComments(dynamic.id);
-        });
-      } catch (err) {
-        console.error('加载动态失败：', err);
-        listEl.innerHTML = `<p>加载失败：${err.message}（功能已切换到本地存储）</p>`;
-      }
-    }
-
-    // 切换动态评论区显示/隐藏
-    function toggleDynamicCommentArea(dynamicId) {
-      const commentArea = document.getElementById(`comment-dynamic-${dynamicId}`);
-      const btn = commentArea?.previousElementSibling?.querySelector('button:first-child');
-      if (commentArea && btn) {
-        commentArea.classList.toggle('hidden');
-        btn.textContent = commentArea.classList.contains('hidden') ? '查看评论' : '收起评论';
-      }
-    }
-
-    // 加载指定动态的评论
-    async function loadDynamicComments(dynamicId) {
-      const listEl = document.getElementById(`comment-list-dynamic-${dynamicId}`);
-      if (!listEl) return;
-      listEl.innerHTML = '<p>加载中...</p>';
-
-      try {
-        let comments = [];
-        if (leanCloudInited) {
-          // LeanCloud查询该动态的评论
-          const query = new AV.Query(Comment);
-          query.equalTo('targetType', 'dynamic');
-          query.equalTo('targetId', dynamicId);
-          query.descending('createdAt');
-          comments = await query.find();
-          comments = comments.map(item => ({ ...item.toJSON(), id: item.id }));
-        } else {
-          // 本地存储查询该动态的评论
-          comments = Comment.findByCondition({ targetType: 'dynamic', targetId: dynamicId })
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        }
-
-        if (comments.length === 0) {
-          listEl.innerHTML = '<p>快来抢沙发！</p>';
-          return;
-        }
-
-        // 渲染评论列表
-        listEl.innerHTML = '';
-        comments.forEach(comment => {
-          const commentItem = document.createElement('div');
-          commentItem.className = 'list-item';
-          commentItem.innerHTML = `
-            <div class="meta">${comment.nickname} · ${formatTime(comment.createdAt)}</div>
-            <div class="content">${formatContentWithLineBreak(comment.content)}</div>
-            <div class="action-btn">
-              <button class="btn btn-${comment.isProtected ? 'secondary' : 'danger'}" onclick="toggleProtect('comment', '${comment.id}', ${comment.isProtected || false}, '${dynamicId}')">
-                ${comment.isProtected ? '取消保护' : '保护'}
-              </button>
-              ${!comment.isProtected ? `<button class="btn btn-danger" onclick="deleteComment('${comment.id}', 'dynamic', '${dynamicId}')">删除</button>` : ''}
-            </div>
-          `;
-          listEl.appendChild(commentItem);
-        });
-      } catch (err) {
-        console.error(`加载动态${dynamicId}的评论失败：`, err);
-        listEl.innerHTML = `<p>评论加载失败：${err.message}</p>`;
-      }
-    }
-
-    async function publishDynamic() {
-      // 先判断元素是否存在
-      const contentEl = document.getElementById('dynamicContent');
-      const passwordEl = document.getElementById('dynamicPassword');
-      const msgEl = document.getElementById('dynamicMsg');
-      if (!contentEl || !passwordEl || !msgEl) {
-        alert('页面元素加载失败，请刷新');
-        return;
-      }
-
-      const content = contentEl.value.trim();
-      const password = passwordEl.value.trim();
-
-      // 校验
-      if (!content) {
-        msgEl.textContent = '没货啊';
-        return;
-      }
-      if (password !== PASSWORD_PUBLISH) {
-        msgEl.textContent = `乐子（密码错误，正确密码：${PASSWORD_PUBLISH}）`;
-        return;
-      }
-
-      try {
-        let dynamicData = { content, isProtected: false, commentAreaOpen: false };
-        if (leanCloudInited) {
-          // LeanCloud发布
-          const dynamic = new Dynamic();
-          dynamic.set(dynamicData);
-          await dynamic.save();
-        } else {
-          // 本地存储发布
-          Dynamic.save(dynamicData);
-        }
-
-        // 提示并刷新
-        msgEl.textContent = '嘿嘿';
-        contentEl.value = '';
-        passwordEl.value = '';
-        loadDynamics();
-      } catch (err) {
-        console.error('发布动态失败：', err);
-        msgEl.textContent = `发布失败：${err.message}`;
-      }
-    }
-
-    async function deleteDynamic(dynamicId) {
-      if (!confirm('若是精华，建议勿删')) return;
-      const password = prompt('请输入密码');
-      if (password !== PASSWORD_PUBLISH) {
-        alert('乐子');
-        return;
-      }
-
-      try {
-        // 检查是否被保护
-        let dynamic;
-        if (leanCloudInited) {
-          const query = new AV.Query(Dynamic);
-          dynamic = await query.get(dynamicId);
-          if (dynamic.get('isProtected')) {
-            alert('你不配');
-            return;
-          }
-          // 删除动态
-          await dynamic.destroy();
-          // 删除关联评论（修复：批量删除添加错误捕获和分批处理）
-          const commentQuery = new AV.Query(Comment);
-          commentQuery.equalTo('targetType', 'dynamic');
-          commentQuery.equalTo('targetId', dynamicId);
-          const comments = await commentQuery.find();
-          // 分批删除（避免批量操作限制）
-          for (let i = 0; i < comments.length; i += 50) {
-            await AV.Object.destroyAll(comments.slice(i, i + 50));
-          }
-        } else {
-          dynamic = Dynamic.get(dynamicId);
-          if (dynamic && dynamic.isProtected) {
-            alert('你不配');
-            return;
-          }
-          // 删除动态
-          Dynamic.destroy(dynamicId);
-          // 删除关联评论
-          const comments = Comment.findByCondition({ targetType: 'dynamic', targetId: dynamicId });
-          comments.forEach(comment => Comment.destroy(comment.id));
-        }
-
-        alert('动态删除成功！');
-        loadDynamics();
-      } catch (err) {
-        console.error('删除动态失败：', err);
-        alert(`删除失败：${err.message}`);
-      }
-    }
-
-    // ------------------------ 文章相关功能 ------------------------
-    async function loadArticle(indexId) {
-      // 先判断元素是否存在
-      const contentEl = document.getElementById('articleContent');
-      const displayEl = document.getElementById('articleContentDisplay');
-      const publishCard = document.getElementById('articlePublishCard');
-      if (!contentEl || !displayEl || !publishCard) {
-        console.warn('文章页面元素未找到');
-        return;
-      }
-
-      displayEl.innerHTML = '<p>加载中...</p>';
-
-      try {
-        let article = null;
-        if (leanCloudInited) {
-          // LeanCloud查询（修复：类型统一为字符串）
-          const query = new AV.Query(Article);
-          query.equalTo('indexId', String(indexId));
-          const articles = await query.find();
-          if (articles.length > 0) {
-            article = { ...articles[0].toJSON(), id: articles[0].id };
-          }
-        } else {
-          // 本地存储查询（类型统一由findByCondition内部处理）
-          const articles = Article.findByCondition({ indexId: indexId });
-          article = articles.length > 0 ? articles[0] : null;
-        }
-
-        // 根据是否有文章控制发布框显示/隐藏
-        if (article) {
-          publishCard.classList.add('hidden'); // 有文章则隐藏发布框
-          contentEl.value = article.content;
-          displayEl.innerHTML = `
-            <div class="list-item">
-              <div class="meta">最后更新：${formatTime(article.updatedAt)}</div>
-              <div class="content">${formatContentWithLineBreak(article.content)}</div>
-              <div class="action-btn">
-                <button class="btn btn-${article.isProtected ? 'secondary' : 'danger'}" onclick="toggleProtect('article', '${article.id}', ${article.isProtected || false}, '${indexId}')">
-                  ${article.isProtected ? '取消保护' : '保护'}
-                </button>
-                ${!article.isProtected ? `<button class="btn btn-danger" onclick="deleteArticle('${article.id}', '${indexId}')">删除</button>` : ''}
-              </div>
-            </div>
-          `;
-        } else {
-          publishCard.classList.remove('hidden'); // 无文章则显示发布框
-          contentEl.value = '';
-          displayEl.innerHTML = '<p>暂无文章，快来发布第一篇吧！</p>';
-        }
-        // 加载评论
-        loadComments('article', indexId);
-      } catch (err) {
-        console.error('加载文章失败：', err);
-        displayEl.innerHTML = `<p>加载失败：${err.message}（功能已切换到本地存储）</p>`;
-        publishCard.classList.remove('hidden'); // 加载失败也显示发布框
-      }
-    }
-
-    async function publishArticle() {
-      // 先判断元素是否存在
-      const contentEl = document.getElementById('articleContent');
-      const passwordEl = document.getElementById('articlePassword');
-      const msgEl = document.getElementById('articleMsg');
-      if (!contentEl || !passwordEl || !msgEl) {
-        alert('页面元素加载失败，请刷新');
-        return;
-      }
-
-      const content = contentEl.value.trim();
-      const password = passwordEl.value.trim();
-
-      // 校验
-      if (!content) {
-        msgEl.textContent = '虚了？';
-        return;
-      }
-      if (password !== PASSWORD_PUBLISH) {
-        msgEl.textContent = `乐子（密码错误，正确密码：${PASSWORD_PUBLISH}）`;
-        return;
-      }
-
-      try {
-        if (leanCloudInited) {
-          // LeanCloud保存：查询是否已有文章（修复：类型统一为字符串）
-          const query = new AV.Query(Article);
-          query.equalTo('indexId', String(currentArticleId));
-          const articles = await query.find();
-
-          let article;
-          if (articles.length > 0) {
-            // 更新
-            article = articles[0];
-            article.set('content', content);
-          } else {
-            // 新建
-            article = new Article();
-            article.set('indexId', String(currentArticleId)); // 统一存储为字符串
-            article.set('content', content);
-            article.set('isProtected', false);
-          }
-          await article.save();
-        } else {
-          // 本地存储保存：查询是否已有文章
-          const articles = Article.findByCondition({ indexId: currentArticleId });
-          if (articles.length > 0) {
-            // 更新
-            Article.save({ id: articles[0].id, content });
-          } else {
-            // 新建（统一存储为字符串）
-            Article.save({ indexId: String(currentArticleId), content });
-          }
-        }
-
-        msgEl.textContent = '文章保存成功！';
-        loadArticle(currentArticleId); // 保存后重新加载，自动隐藏发布框
-      } catch (err) {
-        console.error('保存文章失败：', err);
-        msgEl.textContent = `保存失败：${err.message}`;
-      }
-    }
-
-    async function deleteArticle(articleId, indexId) {
-      if (!confirm('若是精华，建议勿删')) return;
-      const password = prompt('请输入密码');
-      if (password !== PASSWORD_PUBLISH) {
-        alert('乐子');
-        return;
-      }
-
-      try {
-        // 检查是否被保护
-        let article;
-        if (leanCloudInited) {
-          const query = new AV.Query(Article);
-          article = await query.get(articleId);
-          if (article.get('isProtected')) {
-            alert('该文章已被保护，无法删除！');
-            return;
-          }
-          // 删除文章
-          await article.destroy();
-          // 删除关联评论（修复：批量删除添加分批处理）
-          const commentQuery = new AV.Query(Comment);
-          commentQuery.equalTo('targetType', 'article');
-          commentQuery.equalTo('targetId', String(indexId));
-          const comments = await commentQuery.find();
-          // 分批删除（避免批量操作限制）
-          for (let i = 0; i < comments.length; i += 50) {
-            await AV.Object.destroyAll(comments.slice(i, i + 50));
-          }
-        } else {
-          article = Article.get(articleId);
-          if (article && article.isProtected) {
-            alert('该文章已被保护，无法删除！');
-            return;
-          }
-          // 删除文章
-          Article.destroy(articleId);
-          // 删除关联评论
-          const comments = Comment.findByCondition({ targetType: 'article', targetId: String(indexId) });
-          comments.forEach(comment => Comment.destroy(comment.id));
-        }
-
-        alert('文章删除成功！');
-        loadArticle(indexId); // 删除后重新加载，自动显示发布框
-      } catch (err) {
-        console.error('删除文章失败：', err);
-        alert(`删除失败：${err.message}`);
-      }
-    }
-
-    // ------------------------ 评论相关功能 ------------------------
-    async function loadComments(targetType, targetId) {
-      let listEl;
-      if (targetType === 'article') {
-        listEl = document.getElementById('articleCommentList');
-      } else {
-        listEl = document.getElementById(`comment-list-${targetType}-${targetId}`);
-      }
-
-      // 先判断元素是否存在
-      if (!listEl) {
-        console.warn('评论列表元素未找到');
-        return;
-      }
-      listEl.innerHTML = '<p>加载中...</p>';
-
-      try {
-        let comments = [];
-        if (leanCloudInited) {
-          // LeanCloud查询（类型统一为字符串）
-          const query = new AV.Query(Comment);
-          query.equalTo('targetType', targetType);
-          query.equalTo('targetId', String(targetId));
-          query.descending('createdAt');
-          comments = await query.find();
-          comments = comments.map(item => ({ ...item.toJSON(), id: item.id }));
-        } else {
-          // 本地存储查询（类型统一由findByCondition内部处理）
-          comments = Comment.findByCondition({ targetType, targetId: targetId })
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        }
-
-        listEl.innerHTML = '';
-        if (comments.length === 0) {
-          listEl.innerHTML = '<p>快来抢沙发！</p>';
-          return;
-        }
-
-        // 渲染评论
-        comments.forEach(comment => {
-          listEl.innerHTML += `
-            <div class="list-item">
-              <div class="meta">${comment.nickname} · ${formatTime(comment.createdAt)}</div>
-              <div class="content">${formatContentWithLineBreak(comment.content)}</div>
-              <div class="action-btn">
-                <button class="btn btn-${comment.isProtected ? 'secondary' : 'danger'}" onclick="toggleProtect('comment', '${comment.id}', ${comment.isProtected || false}, '${targetId}')">
-                  ${comment.isProtected ? '取消保护' : '保护'}
-                </button>
-                ${!comment.isProtected ? `<button class="btn btn-danger" onclick="deleteComment('${comment.id}', '${targetType}', '${targetId}')">删除</button>` : ''}
-              </div>
-            </div>
-          `;
-        });
-      } catch (err) {
-        console.error('加载评论失败：', err);
-        listEl.innerHTML = `<p>加载失败：${err.message}</p>`;
-      }
-    }
-
-    async function publishComment(targetType, targetId) {
-      // 获取输入内容（先判断元素是否存在）
-      let nickname, content, password, msgEl;
-      
-      if (targetType === 'dynamic') {
-        // 动态评论
-        const commentArea = document.getElementById(`comment-dynamic-${targetId}`);
-        if (!commentArea) {
-          alert('评论区元素未找到');
-          return;
-        }
-        const nicknameEl = commentArea.querySelector('.comment-nickname');
-        const contentEl = commentArea.querySelector('.comment-content');
-        const passwordEl = commentArea.querySelector('.comment-password');
-        msgEl = document.getElementById(`dynamic-comment-msg-${targetId}`);
+    confirmPwd.addEventListener('click', function() {
+        const correctPwd = '110101100';
+        const inputVal = pwdInput.value.trim();
         
-        if (!nicknameEl || !contentEl || !passwordEl || !msgEl) {
-          alert('评论输入框未找到');
-          return;
+        if (inputVal === correctPwd) {
+		hidePasswordModal();
+		// 延迟执行，等待弹窗动画结束
+		setTimeout(() => {
+        showSection('section-images');
+        // 滚动到图片区域顶部
+        imagesSection.scrollIntoView({ behavior: 'smooth' });
+		}, 300);
+		pwdInput.value = ''; // 清空输入框
+		} else {
+            alert('乐子');
+            pwdInput.focus(); // 聚焦输入框
         }
-        
-        nickname = nicknameEl.value.trim();
-        content = contentEl.value.trim();
-        password = passwordEl.value.trim();
-      } else {
-        // 文章评论
-        const nicknameEl = document.getElementById('articleCommentNickname');
-        const contentEl = document.getElementById('articleCommentContent');
-        const passwordEl = document.getElementById('articleCommentPassword');
-        msgEl = document.getElementById('articleCommentMsg');
-        
-        if (!nicknameEl || !contentEl || !passwordEl || !msgEl) {
-          alert('评论输入框未找到');
-          return;
+    });
+
+	    // 5. 密码弹窗取消按钮事件
+    cancelPwd.addEventListener('click', function() {
+        hidePasswordModal();
+        pwdInput.value = ''; // 清空输入框
+    });
+
+    // 6. 点击密码弹窗外部区域关闭弹窗
+    pwdModal.addEventListener('click', function(e) {
+        if (e.target === pwdModal) {
+            hidePasswordModal();
+            pwdInput.value = '';
         }
-        
-        nickname = nicknameEl.value.trim();
-        content = contentEl.value.trim();
-        password = passwordEl.value.trim();
-      }
+    });
 
-      // 校验
-      if (!nickname || !content) {
-        msgEl.textContent = '虚了？';
-        return;
-      }
-      if (password !== PASSWORD_PUBLISH) {
-        msgEl.textContent = `乐子（密码错误，正确密码：${PASSWORD_PUBLISH}）`;
-        return;
-      }
-
-      try {
-        const commentData = {
-          targetType,
-          targetId: String(targetId), // 统一存储为字符串
-          nickname,
-          content,
-          isProtected: false
-        };
-
-        if (leanCloudInited) {
-          // LeanCloud发布
-          const comment = new Comment();
-          comment.set(commentData);
-          await comment.save();
-        } else {
-          // 本地存储发布
-          Comment.save(commentData);
+    // 7. 键盘事件：ESC关闭弹窗，Enter确认密码
+    document.addEventListener('keydown', function(e) {
+        // ESC键关闭弹窗
+        if (e.key === 'Escape' && pwdModal.classList.contains('show')) {
+            hidePasswordModal();
+            pwdInput.value = '';
         }
+        if (e.key === 'Enter' && pwdModal.classList.contains('show') && document.activeElement === pwdInput) {
+		e.preventDefault(); // 阻止默认提交行为
+		confirmPwd.click();
+		}
+    });
 
-        msgEl.textContent = 'good';
-        // 清空输入框
-        if (targetType === 'dynamic') {
-          const commentArea = document.getElementById(`comment-dynamic-${targetId}`);
-          commentArea.querySelector('.comment-nickname').value = '';
-          commentArea.querySelector('.comment-content').value = '';
-          commentArea.querySelector('.comment-password').value = '';
-          // 刷新动态评论
-          loadDynamicComments(targetId);
-        } else {
-          document.getElementById('articleCommentNickname').value = '';
-          document.getElementById('articleCommentContent').value = '';
-          document.getElementById('articleCommentPassword').value = '';
-          // 刷新文章评论
-          loadComments(targetType, targetId);
+    // 8. 辅助函数：显示指定区域
+    function showSection(sectionId) {
+        // 隐藏所有区域
+        contentSections.forEach(section => {
+            section.style.display = 'none';
+        });
+        // 显示目标区域
+        const targetSection = document.getElementById(sectionId);
+        if (targetSection) {
+            targetSection.style.display = 'block';
+            // 滚动到区域顶部（平滑滚动）
+            targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-      } catch (err) {
-        console.error('发布评论失败：', err);
-        msgEl.textContent = `发布失败：${err.message}`;
-      }
-    }
-
-    async function deleteComment(commentId, targetType, targetId) {
-      if (!confirm('是吗')) return;
-      const password = prompt('请输入密码');
-      if (password !== PASSWORD_PUBLISH) {
-        alert('6,樂');
-        return;
-      }
-
-      try {
-        // 检查是否被保护
-        let comment;
-        if (leanCloudInited) {
-          const query = new AV.Query(Comment);
-          comment = await query.get(commentId);
-          if (comment.get('isProtected')) {
-            alert('略略略~');
-            return;
-          }
-          await comment.destroy();
-        } else {
-          comment = Comment.get(commentId);
-          if (comment && comment.isProtected) {
-            alert('略略略~');
-            return;
-          }
-          Comment.destroy(commentId);
-        }
-
-        alert('评论删除成功！');
-        // 刷新评论列表
-        if (targetType === 'dynamic') {
-          loadDynamicComments(targetId);
-        } else {
-          loadComments(targetType, targetId);
-        }
-      } catch (err) {
-        console.error('删除评论失败：', err);
-        alert(`删除失败：${err.message}`);
-      }
-    }
-
-    // ------------------------ 保护/取消保护功能 ------------------------
-    // 修复：新增targetId参数，用于刷新对应评论列表
-    async function toggleProtect(type, id, isProtectedNow, targetId) {
-      const newStatus = !isProtectedNow;
-      const password = prompt(`请输入${newStatus ? '保护' : '取消保护'}密码`);
-      if (password !== PASSWORD_PROTECT) {
-        alert('乐子');
-        return;
-      }
-
-      try {
-        if (leanCloudInited) {
-          // LeanCloud更新状态
-          let query;
-          switch (type) {
-            case 'dynamic': query = new AV.Query(Dynamic); break;
-            case 'article': query = new AV.Query(Article); break;
-            case 'comment': query = new AV.Query(Comment); break;
-            default: alert('类型错误！'); return;
-          }
-          const obj = await query.get(id);
-          obj.set('isProtected', newStatus);
-          await obj.save();
-        } else {
-          // 本地存储更新状态
-          let model;
-          switch (type) {
-            case 'dynamic': model = Dynamic; break;
-            case 'article': model = Article; break;
-            case 'comment': model = Comment; break;
-            default: alert('类型错误！'); return;
-          }
-          const obj = model.get(id);
-          if (obj) {
-            model.save({ id, isProtected: newStatus });
-          }
-        }
-
-        alert(`${newStatus ? '保护' : '取消保护'}成功！`);
-        // 刷新数据
-        if (type === 'dynamic') {
-          loadDynamics();
-        } else if (type === 'article') {
-          loadArticle(targetId);
-        } else if (type === 'comment') {
-          // 刷新对应目标的评论
-          if (targetId) {
-            if (document.getElementById(`comment-list-dynamic-${targetId}`)) {
-              loadDynamicComments(targetId);
-            } else {
-              loadComments('article', targetId);
+        // 重置侧边栏选中状态
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('data-target') === sectionId) {
+                link.classList.add('active');
             }
-          }
-        }
-      } catch (err) {
-        console.error('保护操作失败：', err);
-        alert(`操作失败：${err.message}`);
-      }
+        });
     }
 
-    // ------------------------ 工具函数 ------------------------
-    function formatTime(timeStr) {
-      if (!timeStr) return '';
-      const date = new Date(timeStr);
-      return date.toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
+    // 9. 辅助函数：显示密码弹窗
+    function showPasswordModal() {
+        pwdModal.classList.add('show');
+        pwdInput.focus(); // 自动聚焦输入框
     }
 
-    // 全局函数挂载（修复HTML内联调用时函数未定义问题）
-    window.toggleDynamicCommentArea = toggleDynamicCommentArea;
-    window.deleteDynamic = deleteDynamic;
-    window.toggleProtect = toggleProtect;
-    window.deleteComment = deleteComment;
-    window.publishComment = publishComment;
-    window.deleteArticle = deleteArticle;
-  </script>
-</body>
-</html>
+    // 10. 辅助函数：隐藏密码弹窗
+    function hidePasswordModal() {
+        pwdModal.classList.remove('show');
+        pwdInput.value = ''; // 清空输入框
+    }
+
+    // 11. 响应式适配：侧边栏折叠/展开（可选增强）
+    // 移动端适配：点击导航链接后自动收起侧边栏（仅移动端生效）
+    if (window.innerWidth <= 768) {
+        navLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                const sidebar = document.querySelector('.sidebar');
+                sidebar.style.height = 'auto';
+            });
+        });
+    }
+
+    // 12. 图片加载失败处理
+    const imageItems = document.querySelectorAll('.image-item img');
+    imageItems.forEach(img => {
+        img.addEventListener('error', function() {
+            // 加载失败时显示占位图（可替换为实际占位图路径）
+            this.src = 'img/placeholder.jpg';
+            this.alt = '图片加载失败';
+            this.style.objectFit = 'contain';
+            this.style.backgroundColor = 'rgba(0,0,0,0.1)';
+        });
+    });
+});
+</script>
