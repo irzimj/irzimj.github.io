@@ -1,519 +1,853 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SAR</title>
-    <style>
-        /* 全局样式重置 */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: "Microsoft YaHei", 宋体, sans-serif;
-        }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>SAR</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+  -webkit-tap-highlight-color: transparent; /* 移除移动端点击高亮 */
+}
+/* 核心配色调整：典雅金+黑色 */
+body {
+  background: #121212; /* 深黑色背景 */
+  color: #f5e7d3; /* 浅金色文字 */
+  min-height: 100vh; /* 确保页面高度至少铺满屏幕 */
+  -webkit-font-smoothing: antialiased; /* 移动端字体抗锯齿 */
+  -moz-osx-font-smoothing: grayscale;
+}
 
-        /* 莫兰迪色系定义 - 调整为暗色系（核心修改部分） */
-        :root {
-            --main-green: #2A3916; /* 加深的低饱和莫兰迪深绿（主色） */
-            --main-green-light: #374821; /* 深绿浅调（更暗） */
-            --main-green-dark: #1F2B10; /* 深绿暗调（更深） */
-            --aux-red: #5D4A4A;    /* 低饱和暗红（加深） */
-            --aux-red-light: #6D5A5A; /* 暗红浅调（加深） */
-            --aux-yellow: #635845; /* 低饱和暗黄（加深） */
-            --aux-yellow-light: #726855; /* 暗黄浅调（加深） */
-            --aux-blue: #2D3A48;   /* 低饱和暗蓝（加深） */
-            --bg-color: #24231F;   /* 页面背景（暗黄系深色） */
-            --text-color: #E8E4D8; /* 正文文字（浅米色，提高对比度） */
-            --sidebar-bg: #2A3916; /* 侧边栏背景（加深的墨绿） */
-            --sidebar-text: #E8E4D8; /* 侧边栏文字（浅米色） */
-            --hover-color: #374821;/* hover高亮（深绿浅调） */
-            --card-bg: #2D2C27;    /* 卡片背景色（深红棕暗调） */
-            --shadow-light: 0 2px 8px rgba(0,0,0,0.2); /* 浅阴影（加深） */
-            --shadow-medium: 0 4px 12px rgba(0,0,0,0.3); /* 中阴影（加深） */
-            --card-radius: 12px;   /* 统一卡片圆角 */
-            --card-padding: 40px;  /* 统一卡片内边距 */
-            --modal-animate-time: 300ms; /* 弹窗动画时长 */
-        }
+/* 导航栏 */
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(0,0,0,0.95); /* 纯黑背景，提高不透明度 */
+  z-index: 999;
+  border-bottom: 1px solid #d4b98c; /* 金色边框 */
+  backdrop-filter: blur(8px); /* 毛玻璃效果，增强Apple风格 */
+  -webkit-backdrop-filter: blur(8px); /* 兼容iOS */
+}
+nav {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 0; /* 移除间距 */
+  flex-shrink: 0; /* 防止压缩 */
+}
+/* Logo样式 */
+.nav-logo {
+  width: 32px; /* Logo宽度 */
+  height: 32px; /* Logo高度 */
+  object-fit: contain; /* 保持图片比例 */
+  border-radius: 4px; /* 轻微圆角，贴合整体风格 */
+  flex-shrink: 0; /* 防止压缩 */
+}
+nav ul {
+  display: flex;
+  list-style: none;
+  padding: 12px 0;
+  align-items: center; /* 垂直居中，避免文字错位 */
+  gap: 26px;
+}
+nav li {
+  flex-shrink: 0; /* 防止导航项被压缩 */
+}
+nav a {
+  color: #d4b98c; /* 典雅金文字 */
+  text-decoration: none;
+  font-size: 14px;
+  opacity: 0.8;
+  cursor: pointer;
+  display: inline-block; /* 增强点击区域 */
+  padding: 4px 8px; /* 扩大移动端点击范围 */
+}
+nav a:hover {
+  opacity: 1;
+  color: #f5e7d3; /* 浅金色高亮 */
+}
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            min-height: 100vh;
-            scroll-behavior: smooth; /* 全局平滑滚动 */
-            line-height: 1.6;
-            letter-spacing: 0.3px;
-        }
+/* 主内容 */
+main {
+  margin-top: 60px;
+  padding: 0;
+  padding-bottom: 40px; /* 底部留白，避免内容贴底 */
+}
+.container {
+  max-width: 100%;
+  margin: 0 auto;
+}
 
-        /* 左侧索引栏样式 */
-        .sidebar {
-            width: 240px;
-            background-color: var(--sidebar-bg);
-            border-right: 3px solid var(--aux-yellow);
-            padding: 30px 0;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-            box-shadow: var(--shadow-medium);
-            z-index: 10;
-        }
+/* 品牌介绍文字区 */
+.intro-section {
+  max-width: 1000px;
+  margin: 20px auto; /* 移动端减少上下间距 */
+  padding: 20px 16px; /* 适配小屏内边距 */
+  background: #1a1a1a;
+  border-radius: 20px;
+  border: 1px solid #d4b98c33;
+  width: 92%; /* 小屏留边距，避免贴边 */
+}
+.intro-section h2 {
+  font-size: clamp(1.8rem, 5vw, 2rem); /* 响应式标题 */
+  color: #f5e7d3;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.intro-section p {
+  font-size: clamp(1rem, 3vw, 1.125rem); /* 响应式正文 */
+  line-height: 1.8;
+  color: #d4b98c;
+  margin-bottom: 16px;
+  text-align: justify;
+  white-space: pre-wrap; /* 新增：保留空格和换行 */
+  word-break: break-all; /* 防止长文本溢出 */
+}
+.intro-section p:last-child {
+  margin-bottom: 0;
+}
 
-        /* 侧边栏标题装饰 */
-        .sidebar-header {
-            padding: 0 20px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            margin-bottom: 10px;
-        }
+/* 卡片网格区 */
+.grid {
+  max-width: 1000px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 减小最小宽度，适配小屏 */
+  gap: 16px; /* 移动端减小间距 */
+  margin: 20px auto; /* 移动端减少上下间距 */
+  padding: 0 16px; /* 左右留白更合理 */
+  width: 92%; /* 统一宽度规则 */
+}
 
-        .sidebar-header h2 {
-            color: var(--sidebar-text);
-            font-size: 18px;
-            font-weight: normal;
-            letter-spacing: 1px;
-            text-align: center;
-            padding: 8px 0;
-            background-color: rgba(0,0,0,0.2); /* 加深背景 */
-            border-radius: 6px;
-        }
+/* 卡片 */
+.card {
+  background: #1a1a1a;
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  border: 1px solid #d4b98c33;
+  touch-action: manipulation; /* 优化移动端触摸行为 */
+}
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 25px rgba(212, 185, 140, 0.15);
+  border-color: #d4b98c;
+}
+.card:active {
+  transform: translateY(-2px); /* 移动端点击反馈 */
+}
+.card .inner {
+  padding: 30px 20px; /* 移动端减小内边距 */
+  text-align: center;
+}
+.card h2 {
+  font-size: clamp(1.25rem, 4vw, 1.5rem); /* 响应式卡片标题 */
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #f5e7d3;
+}
+.card p {
+  color: #a89470;
+  font-size: clamp(0.875rem, 3vw, 1rem); /* 响应式卡片副标题 */
+}
 
-        .sidebar .nav-item {
-            list-style: none;
-            margin: 4px 0;
-        }
+/* 密码弹窗样式 */
+.password-modal {
+  display: none;
+  position: fixed;
+  z-index: 1001;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.85); /* 加深遮罩，增强对比 */
+  align-items: center;
+  justify-content: center;
+  padding: 20px; /* 小屏留边距 */
+}
+.password-modal.show {
+  display: flex;
+}
+.password-box {
+  background: #1a1a1a;
+  border-radius: 16px;
+  padding: 30px 20px; /* 移动端减小内边距 */
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 10px 30px rgba(212, 185, 140, 0.2);
+  text-align: center;
+  border: 1px solid #d4b98c;
+}
+.password-box h3 {
+  font-size: clamp(1.25rem, 4vw, 1.375rem);
+  margin-bottom: 20px;
+  color: #f5e7d3;
+}
+.password-input {
+  width: 100%;
+  padding: 14px 16px; /* 增大输入框高度，方便触摸 */
+  font-size: 18px;
+  border: 1px solid #a89470;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  outline: none;
+  text-align: center;
+  background: #222;
+  color: #f5e7d3;
+  -webkit-appearance: none; /* 移除iOS默认样式 */
+  appearance: none;
+}
+.password-input:focus {
+  border-color: #d4b98c;
+  box-shadow: 0 0 0 2px rgba(212, 185, 140, 0.2);
+}
+.password-buttons {
+  display: flex;
+  gap: 12px;
+}
+.password-btn {
+  flex: 1;
+  padding: 14px 12px; /* 增大按钮高度，方便触摸 */
+  border-radius: 8px;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+  -webkit-appearance: none; /* 移除iOS默认样式 */
+  appearance: none;
+}
+.confirm-btn {
+  background: #d4b98c;
+  color: #121212;
+  font-weight: 600;
+}
+.confirm-btn:hover, .confirm-btn:active {
+  background: #f5e7d3;
+}
+.cancel-btn {
+  background: #222;
+  color: #d4b98c;
+  border: 1px solid #d4b98c33;
+}
+.cancel-btn:hover, .cancel-btn:active {
+  background: #333;
+  border-color: #d4b98c;
+}
+.error-message {
+  color: #ff8a65;
+  font-size: 14px;
+  margin-top: 10px;
+  display: none;
+}
+.error-message.show {
+  display: block;
+}
 
-        .sidebar .nav-link {
-            display: block;
-            padding: 14px 20px;
-            color: var(--sidebar-text);
-            text-decoration: none;
-            font-size: 16px;
-            border-left: 3px solid transparent;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 0 8px 8px 0;
-            position: relative;
-            overflow: hidden;
-        }
+/* 全屏模态框基础样式 */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #121212;
+  padding: 0;
+  overflow: hidden;
+}
+.modal.show {
+  display: block;
+}
 
-        /* 侧边栏链接hover渐变背景 */
-        .sidebar .nav-link::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255,255,255,0.12); /* 加深hover背景 */
-            transform: translateX(-100%);
-            transition: transform 0.4s ease;
-            z-index: 0;
-        }
+/* 模态框内容容器 - 全屏滚动 */
+.modal-box {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 70px 16px 40px; /* 适配小屏，减少顶部padding */
+  -webkit-overflow-scrolling: touch; /* iOS顺滑滚动 */
+}
 
-        /* 侧边栏链接hover效果 */
-        .sidebar .nav-link:hover {
-            background-color: var(--hover-color);
-            color: #F2F2EC;
-            border-left-color: var(--aux-red);
-            transform: translateX(3px);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        }
-		.sidebar .nav-link.active {
-			background-color: var(--main-green-dark);
-			border-left-color: var(--aux-yellow);
-			color: #F2F2EC;
-			box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-		}
-        .sidebar .nav-link:hover::before {
-            transform: translateX(0);
-        }
+/* 返回按钮 - 固定在左上角 */
+.back-btn {
+  position: fixed;
+  left: 16px; /* 小屏减小左间距 */
+  top: 16px; /* 小屏减小上间距 */
+  font-size: 16px; /* 移动端减小字体 */
+  background: rgba(26,26,26,0.9); /* 增强不透明度 */
+  color: #d4b98c;
+  border: 1px solid #d4b98c33;
+  cursor: pointer;
+  padding: 8px 12px; /* 移动端减小按钮尺寸 */
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 1001;
+  transition: all 0.3s;
+  touch-action: manipulation;
+}
+.back-btn:hover, .back-btn:active {
+  background: rgba(26,26,26,1);
+  border-color: #d4b98c;
+  color: #f5e7d3;
+}
+.back-btn::before {
+  content: "←";
+  font-size: 18px;
+}
 
-        .sidebar .nav-link span {
-            position: relative;
-            z-index: 1;
-        }
+/* 文章内容样式 - 自动识别换行和空格 */
+.article-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 10px 0;
+  width: 92%; /* 小屏留边距 */
+}
+.article-content h1 {
+  font-size: clamp(1.75rem, 6vw, 2.5rem); /* 响应式文章标题 */
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #f5e7d3;
+  line-height: 1.2;
+}
+.article-content .date {
+  color: #a89470;
+  font-size: clamp(0.875rem, 3vw, 1rem);
+  margin-bottom: 30px;
+  border-bottom: 1px solid #d4b98c33;
+  padding-bottom: 16px;
+}
 
-        /* 右侧内容区域 */
-        .content {
-            flex: 1;
-            margin-left: 240px;
-            padding: 50px 60px;
-            min-height: 100vh;
-            transition: all 0.3s ease;
-        }
+/* 关键：让文章自动识别换行、空格 */
+.article-content .content {
+  font-size: clamp(1rem, 3vw, 1.125rem);
+  line-height: 1.8;
+  color: #d4b98c;
+  white-space: pre-wrap;    /* 保留换行和空格 */
+  word-wrap: break-word;    /* 自动换行 */
+  word-break: break-all;    /* 新增：兼容所有字符的换行 */
+  tab-size: 4;              /* 新增：设置制表符显示宽度 */
+}
 
-        /* 通用板块样式（统一所有内容板块） */
-        .content-section {
-            max-width: 1000px;
-            margin: 0 auto;
-            display: none;
-            background-color: var(--card-bg);
-            padding: var(--card-padding);
-            border-radius: var(--card-radius);
-            box-shadow: var(--shadow-light);
-            line-height: 1.9;
-        }
+.article-content .content strong {
+  color: #f5e7d3;
+}
 
-        /* 主页样式（修复样式绑定） */
-        #section-home {
-            border-top: 4px solid var(--aux-red);
-            font-size: 18px;
-            color: var(--text-color); /* 改为统一文字色 */
-        }
+/* 图片展示样式 - 优化为网格布局 */
+.image-content {
+  width: 100%;
+  height: 100%;
+  background: #121212;
+  padding: 20px 16px;
+}
+/* 图片网格容器 - 修复对齐问题 */
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  max-width: 1200px;
+  margin: 0 auto;
+  justify-items: center; /* 水平居中 */
+  align-items: center;   /* 垂直居中 */
+}
+/* 图片网格项 - 简化样式 */
+.image-item {
+  width: 100%; /* 确保占满网格单元格 */
+}
+/* 缩略图样式 */
+.modal-thumbnail {
+  width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  cursor: zoom-in;
+  border: 1px solid #d4b98c33;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+}
+.modal-thumbnail:hover {
+  border-color: #d4b98c;
+  transform: scale(1.02);
+}
 
-        /* 图片展示区域 */
-        #section-images {
-            border-top: 4px solid var(--aux-blue);
-        }
+/* 图片预览弹窗（全屏放大） */
+.image-preview-modal {
+  display: none;
+  position: fixed;
+  z-index: 1002;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.95);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.image-preview-modal.show {
+  display: flex;
+}
+/* 放大后的图片 */
+.preview-image {
+  max-width: 90%;
+  max-height: 90vh;
+  object-fit: contain;
+  border: 1px solid #d4b98c;
+  border-radius: 8px;
+}
+/* 关闭预览按钮 */
+.close-preview {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(26,26,26,0.9);
+  color: #d4b98c;
+  border: 1px solid #d4b98c33;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 0.3s;
+}
+.close-preview:hover {
+  background: rgba(26,26,26,1);
+  border-color: #d4b98c;
+  color: #f5e7d3;
+}
 
-        /* 文章区域样式 */
-        .section-article {
-            border-left: 4px solid var(--aux-yellow);
-        }
+/* 针对小屏手机的特殊适配 (375px以下) */
+@media (max-width: 375px) {
+  .intro-section {
+    width: 95%;
+    padding: 16px 12px;
+  }
+  .grid {
+    width: 95%;
+    gap: 12px;
+  }
+  .card .inner {
+    padding: 20px 15px;
+  }
+  .back-btn {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+  .password-box {
+    padding: 20px 15px;
+  }
+  .password-input {
+    padding: 12px 14px;
+    font-size: 16px;
+  }
+  /* 移动端Logo适配 */
+  .nav-logo {
+    width: 28px;
+    height: 28px;
+  }
+  /* 移动端图片网格适配 */
+  .image-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px;
+  }
+}
 
-        /* 标题通用样式 */
-        .section-title {
-            font-size: 30px;
-            padding-bottom: 15px;
-            margin-bottom: 30px;
-            text-align: center;
-            letter-spacing: 1px;
-            position: relative;
-            border-bottom: 2px solid var(--main-green-light); /* 调整边框色 */
-            color: var(--text-color); /* 标题文字色统一 */
-        }
+/* 针对平板横屏的优化 */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .intro-section {
+    margin: 30px auto;
+    padding: 25px 20px;
+  }
+  .grid {
+    gap: 20px;
+    margin: 30px auto;
+  }
+  /* 平板图片网格适配 */
+  .image-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+  }
+}
 
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
-            height: 2px;
-            background-color: var(--aux-yellow);
-        }
-
-        /* 文章标题配色 */
-        .title-red { color: #C8B8A8; } /* 调整红色标题为暗系莫兰迪红 */
-        .title-blue { color: #A8B0BA; } /* 调整蓝色标题为暗系莫兰迪蓝 */
-
-        .article-content {
-		font-size: 16px;
-		color: var(--text-color);
-		white-space: pre-line;
-		line-height: 1.8; /* 增加行高提升可读性 */
-		letter-spacing: 0.5px;
-		padding: 20px;
-		background-color: rgba(45, 44, 39, 0.6);
-		border-radius: 8px;
-		}
-
-        /* 核心修改：图片容器改为一行2列 */
-        .images-container {
-            display: grid;
-            /* 固定2列，列宽均分，间距保持25px */
-            grid-template-columns: repeat(2, 1fr);
-            gap: 25px;
-        }
-
-        .image-item {
-            border: 2px solid var(--main-green-light); /* 调整边框色 */
-            border-radius: 10px;
-            overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            background-color: #33322D; /* 图片卡片背景加深 */
-        }
-
-        .image-item:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: var(--shadow-medium);
-            border-color: var(--aux-yellow);
-        }
-
-        .image-item img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            display: block;
-            transition: transform 0.5s ease;
-        }
-
-        .image-item:hover img {
-            transform: scale(1.05);
-        }
-
-        /* 密码弹窗样式 */
-        .password-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8); /* 弹窗背景加深 */
-            justify-content: center;
-            align-items: center;
-            z-index: 999;
-            backdrop-filter: blur(2px);
-            transition: opacity var(--modal-animate-time) ease;
-            opacity: 0;
-        }
-
-        .password-modal.show {
-            opacity: 1;
-            display: flex;
-        }
-
-        .modal-content {
-            background-color: var(--card-bg);
-            padding: 40px;
-            border-radius: var(--card-radius);
-            width: 380px;
-            text-align: center;
-            border: 3px solid var(--main-green-light); /* 弹窗边框调整 */
-            box-shadow: var(--shadow-medium);
-            transform: translateY(-20px);
-            transition: transform var(--modal-animate-time) ease;
-        }
-
-        .password-modal.show .modal-content {
-            transform: translateY(0);
-        }
-
-        .modal-content h3 {
-            color: #D8C8B8; /* 弹窗标题色调整 */
-            margin-bottom: 25px;
-            font-size: 20px;
-            letter-spacing: 0.5px;
-        }
-
-        .modal-content input {
-            width: 80%;
-            padding: 12px 15px;
-            margin-bottom: 25px;
-            border: 1px solid var(--main-green-light); /* 输入框边框调整 */
-            border-radius: 6px;
-            font-size: 16px;
-            background-color: #33322D; /* 输入框背景暗系 */
-            color: var(--text-color); /* 输入框文字色 */
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .modal-content input:focus {
-            outline: none;
-            border-color: var(--aux-red);
-            box-shadow: 0 0 0 3px rgba(93, 74, 74, 0.3); /* 输入框聚焦阴影调整 */
-        }
-
-        .modal-content button {
-            padding: 12px 24px;
-            margin: 0 8px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 16px;
-            letter-spacing: 0.5px;
-        }
-
-        #confirmPwd {
-            background-color: var(--main-green);
-            color: var(--text-color);
-        }
-
-        #confirmPwd:hover {
-            background-color: var(--main-green-light);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(55, 72, 33, 0.3); /* 按钮阴影调整 */
-        }
-
-        #cancelPwd {
-            background-color: var(--aux-red);
-            color: var(--text-color);
-        }
-
-        #cancelPwd:hover {
-            background-color: var(--aux-red-light);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(109, 90, 90, 0.3); /* 按钮阴影调整 */
-        }
-
-        /* 响应式适配 */
-        @media (max-width: 992px) {
-            .sidebar {
-                width: 200px;
-            }
-            .content {
-                margin-left: 200px;
-                padding: 30px 30px;
-            }
-            .content-section {
-                padding: 30px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-            }
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: static;
-                border-right: none;
-                border-bottom: 3px solid var(--aux-yellow);
-            }
-            .content {
-                margin-left: 0;
-                padding: 20px 20px;
-            }
-            .modal-content {
-                width: 90%;
-                padding: 30px 20px;
-            }
-            #section-empty-qf {
-                padding: 40px 20px;
-                font-size: 18px;
-            }
-            /* 移动端保持一行2列，也可改为1列：grid-template-columns: 1fr; */
-            .images-container {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        /* 滚动条美化 */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(45, 44, 39, 0.5); /* 滚动条轨道暗系 */
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--main-green-light);
-            border-radius: 4px;
-            transition: background 0.3s ease;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--main-green);
-        }
-
-        /* 图片放大预览弹窗 新增样式 */
-        .img-preview-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.9);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            cursor: zoom-out;
-        }
-        .img-preview-modal.show {
-            display: flex;
-        }
-        .preview-img {
-            max-width: 90%;
-            max-height: 90%;
-            object-fit: contain;
-            transition: transform 0.3s ease;
-        }
-        .preview-img:hover {
-            transform: scale(1.02);
-        }
-    </style>
+/* 禁用文字选择（增强Apple风格） */
+.card, .back-btn, .password-btn, .nav-logo, .modal-thumbnail {
+  user-select: none;
+  -webkit-user-select: none;
+}
+</style>
 </head>
 <body>
-   <!-- 左侧索引栏 -->
-<aside class="sidebar">
-    <div class="sidebar-header">
-        <h2>有趣的西东</h2>
+
+<header>
+  <nav>
+    <div class="nav-left">
+      <img src="img/logo.jpg" alt="Logo" class="nav-logo">
     </div>
     <ul>
-        <li class="nav-item"><a href="#" class="nav-link active" data-target="section-home"><span>首页</span></a></li>
-        <li class="nav-item"><a href="#" class="nav-link" data-target="section-images"><span>好图</span></a></li>
-        <li class="nav-item"><a href="#" class="nav-link" data-target="section-empty-qf"><span>《清风》</span></a></li>
-        <li class="nav-item"><a href="#" class="nav-link" data-target="section-klby"><span>《可乐博弈(未完)》</span></a></li>
-        <li class="nav-item"><a href="#" class="nav-link" data-target="section-gsxb"><span>《杠十细胞（残缺）》</span></a></li>
-        <li class="nav-item"><a href="#" class="nav-link" data-target="section-gwyy"><span>《过往云烟》</span></a></li>
-        <li class="nav-item"><a href="#" class="nav-link" data-target="section-xyy"><span>《星月夜》</span></a></li>
-        <li class="nav-item"><a href="#" class="nav-link" data-target="section-jfyl"><span>《金风玉露》</span></a></li>
+      <li><a onclick="openModal('personModal')">人物介绍</a></li>
+      <li><a onclick="openModal('logModal')">更新日志</a></li>
     </ul>
-</aside>
+  </nav>
+</header>
 
-    <!-- 右侧内容区域 -->
-    <main class="content">
-        <!-- 主页区域（修复样式绑定） -->
-        <section class="content-section" id="section-home">
-            <h2 class="section-title title-red">SAR</h2>
-            <div class="home-content">
-				嘿嘿，快一个月没更新，但这次出了一个大大的文章，只是一个小更新。
-                新增黄总长文《可乐博弈(上)》！
-                下架三个无用文章；
-                《盗号》很不幸...学校电脑没有以前聊天记录文件，就不搞了，而且这是很久之前的事了；
-                如果有好玩的时事投稿，以图片形式投给我放首页；
-                好图也进行了小小的整理...
-            </div>
-			<div class="images-container">
-            (此处缺少图片...)
-            首发日:2025/12/14
-            更新时间2026/01/21
-			</div>
-        </section>
-        <section class="content-section" id="section-images">
-            <h2 class="section-title title-blue">好图展示</h2>
-            <div class="images-container">
-            <div class="image-item"><img src="img/0001.jpg" alt=""></div>
-			<div class="image-item"><img src="img/0002.jpg" alt=""></div>
-            <div class="image-item"><img src="img/0003.jpg" alt=""></div>
-            <div class="image-item"><img src="img/0004.jpg" alt=""></div>
-			<div class="image-item"><img src="img/0005.jpg" alt=""></div>
-			<div class="image-item"><img src="img/0006.jpg" alt=""></div>
-			<div class="image-item"><img src="img/0007.jpg" alt=""></div>
-            <div class="image-item"><img src="img/0008.jpg" alt=""></div>
-            <div class="image-item"><img src="img/0009.jpg" alt=""></div>
-			<div class="image-item"><img src="img/0010.jpg" alt=""></div>
-            <div class="image-item"><img src="img/0011.jpg" alt=""></div>
-            <div class="image-item"><img src="img/0012.jpg" alt=""></div>
-			<div class="image-item"><img src="img/0013.jpg" alt=""></div>
-			<div class="image-item"><img src="img/0014.jpg" alt=""></div>
-			<div class="image-item"><img src="img/0015.jpg" alt=""></div>
-            <div class="image-item"><img src="img/0016.jpg" alt=""></div>
-            <div class="image-item"><img src="img/0017.jpg" alt=""></div>
-			<div class="image-item"><img src="img/0018.jpg" alt=""></div>
-            <div class="image-item"><img src="img/0019.jpg" alt=""></div>
-            <div class="image-item"><img src="img/0020.jpg" alt=""></div>
-			<div class="image-item"><img src="img/0021.jpg" alt=""></div>
-			<div class="image-item"><img src="img/0022.jpg" alt=""></div>
-			<div class="image-item"><img src="img/0023.jpg" alt=""></div>
-            <div class="image-item"><img src="img/0024.jpg" alt=""></div>
-            <div class="image-item"><img src="img/0025.jpg" alt=""></div>
-			<div class="image-item"><img src="img/0026.jpg" alt=""></div>
-			<div class="image-item"><img src="img/0027.jpg" alt=""></div>
-            <div class="image-item"><img src="img/0028.jpg" alt=""></div>
-            <div class="image-item"><img src="img/0029.jpg" alt=""></div>
-			<div class="image-item"><img src="img/0030.jpg" alt=""></div>
-			<div class="image-item"><img src="img/0031.jpg" alt=""></div>
-            <div class="image-item"><img src="img/0032.jpg" alt=""></div>
-            <div class="image-item"><img src="img/0033.jpg" alt=""></div>
-            <div class="image-item"><img src="img/0034.jpg" alt=""></div>
-            </div>
-        </section>
+<main>
+  <div class="container">
+    <div class="intro-section">
+      <h2>SAR「Study And Relax」</h2>
+      <p>很显然，这次的更新整个颜色和排版变了（虽然不是新年特别款）</p>
+      <p>只是更新了一点点图片，黄总的《可乐博弈》正在酝酿，即将更新...</p>
+      <p>如果不是我的初中朋友，不要再问我看图片的密码，想看自己去找密码，图片都是初中同学，你看个屌</p>
+      <p>                                                                                                                                       首次发布时间：12月14日</p>
+<img 
+  src="img/logo.jpg" 
+  alt="" 
+  style="width:100%;height:auto;display:block;margin:16px auto 0;border-radius:8px" 
+  onclick=""
+>
+    </div>
 
-        <section class="content-section section-article" id="section-empty-qf">
-            <h2 class="section-title title-red">《清风》</h2>
-            <div class="article-content">
-——- 献给往日种种
+    <div class="grid">
+      <div class="card" onclick="openPasswordModal()">
+        <div class="inner">
+          <h2>好图</h2>
+          <p>快进来</p>
+        </div>
+      </div>
 
+      <div class="card" onclick="openModal('article1')">
+        <div class="inner">
+          <h2>清风</h2>
+          <p>水波不兴</p>
+        </div>
+      </div>
+
+      <div class="card" onclick="openModal('article2')">
+        <div class="inner">
+          <h2>可乐博弈</h2>
+          <p>真实事件，吊的不用改编</p>
+        </div>
+      </div>
+
+      <div class="card" onclick="openModal('article3')">
+        <div class="inner">
+          <h2>杠十细胞（残缺）</h2>
+          <p>细胞分裂后，都结束了</p>
+        </div>
+      </div>
+
+      <div class="card" onclick="openModal('article4')">
+        <div class="inner">
+          <h2>过往云烟</h2>
+          <p>男生之间的情感纠葛，当然是编的啦</p>
+        </div>
+      </div>
+
+      <div class="card" onclick="openModal('article5')">
+        <div class="inner">
+          <h2>金风玉露</h2>
+          <p>胜却人间无数</p>
+        </div>
+      </div>
+
+      <div class="card" onclick="openModal('article6')">
+        <div class="inner">
+          <h2>星月夜</h2>
+          <p>百合花开</p>
+        </div>
+      </div>
+
+      <div class="card" onclick="openModal('article7')">
+        <div class="inner">
+          <h2>正在酝酿...</h2>
+          <p>正在酝酿...</p>
+        </div>
+      </div>
+
+      <div class="card" onclick="openModal('article8')">
+        <div class="inner">
+          <h2>正在酝酿.....</h2>
+          <p>正在酝酿...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="password-modal" id="passwordModal">
+  <div class="password-box">
+    <h3>请输入文本</h3>
+    <input type="password" class="password-input" id="passwordInput" placeholder="输入">
+    <div class="password-buttons">
+      <button class="password-btn cancel-btn" onclick="closePasswordModal()">我是乐子</button>
+      <button class="password-btn confirm-btn" onclick="checkPassword()">入</button>
+    </div>
+    <div class="error-message" id="errorMessage">初中同学找我要，其他人一边去</div>
+  </div>
+</div>
+
+<div class="modal" id="personModal">
+  <button class="back-btn" onclick="closeAllModals()">返回</button>
+  <div class="modal-box article-content">
+    <h1>关于我们</h1>
+    <div class="date">2026 年 2 月 13 日</div>
+    <div class="content">
+DYR：暂无哦
+
+HTY：
+1.生日：11.28
+2.最喜欢的一个学科:化学
+3.自己的最爱昵称：悠依雨
+4.喜欢甜的还是辣的:辣
+5.喜欢什么花及其象征:飞燕草 自由
+6.追不追星:不追
+7.有没有给异性置顶：有
+8. 喜欢看小说吗：喜欢
+9.最喜欢什么小说:追风筝的人
+10.最喜欢的三个游戏:极限竞速地平线5，学生时代，文明时代2
+11.喜欢果茶还是奶茶:奶茶
+12.喜欢牛奶还是饮料：饮料
+13.今年过生日收到最好的礼物是谁送的：家长
+14.今年过生日收到最好的礼物是什么:活着
+15.喜欢吃醋吗:暂未知何意味
+16.对恋爱有什么要求:暂未知何意味
+17.喜欢QQ还是微信: QQ
+18.经常用什么软件听歌：酷狗
+19.在哪个方面很有经验：各个有兴趣的方面
+20.最想回到什么时候：8岁
+21.最讨厌做什么：学习
+
+LHR：暂无哦
+
+LLT：暂无哦
+
+MJY：
+1.生日：11.24
+2.最喜欢的一个学科：math
+3.自己的最爱昵称：mjy
+4.喜欢甜的还是辣的:甘い
+5.喜欢什么花及其象征:薰衣草 爱
+6.追不追星:追band
+7.有没有给异性置顶：wu
+8. 喜欢听音乐吗：大好き
+9.最喜欢什么歌:ふたりごと
+10.最喜欢的三个游戏:对马岛之魂 战地 星球大战
+11.喜欢果茶还是奶茶:奶茶
+12.喜欢牛奶还是饮料：饮料
+13.今年过生日收到最好的礼物是谁送的：同学
+14.今年过生日收到最好的礼物是什么:CD
+15.喜欢吃醋吗:赞
+16.对恋爱有什么要求:是个女的就行
+17.喜欢QQ还是微信: QQ
+18.经常用什么软件听歌：wyy
+19.在哪个方面很有经验：吉他
+20.最想回到什么时候：12
+21.最讨厌做什么：剪头
+
+irzimj：暂无介绍，马上给，你去看看文章吧
+    </div>
+  </div>
+</div>
+
+<!-- 导航栏-更新日志模态框（全屏滚动） -->
+<div class="modal" id="logModal">
+  <button class="back-btn" onclick="closeAllModals()">返回</button>
+  <div class="modal-box article-content">
+    <h1>更新日志</h1>
+    <div class="date">2026 年 2 月 13 日</div>
+    <div class="content">
+每次更新都会有图片的...
+
+2026.02.13 更新排版和主题色，并且有了我们的logo！感谢设计师黄总
+
+2026.01.21《可乐博弈》上篇
+
+2025.12.28 《清风》
+
+2025.12.17 一点图片
+
+2025.12.14 当日发生，劲爆的片哥盗号内容（目前已下架）
+
+2025.12.14 发布首日，大量文章和图片，部分文章和图片目前已下架
+    </div>
+  </div>
+</div>
+
+<!-- 图片模态框（网格布局+点击放大） -->
+<div class="modal" id="imageModal">
+  <button class="back-btn" onclick="closeAllModals()">返回</button>
+  <div class="modal-box image-content">
+    <div class="image-grid">
+      <div class="image-item">
+        <img src="img/0000.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0000.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0001.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0001.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0002.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0002.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0003.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0003.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0004.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0004.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0005.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0005.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0006.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0006.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0007.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0007.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0008.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0008.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0009.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0009.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0010.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0010.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0011.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0011.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0012.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0012.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0013.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0013.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0014.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0014.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0015.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0015.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0016.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0016.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0017.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0017.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0018.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0018.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0019.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0019.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0020.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0020.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0021.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0021.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0022.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0022.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0023.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0023.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0024.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0024.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0025.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0025.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0026.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0026.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0027.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0027.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0028.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0028.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0029.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0029.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0030.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0021.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0031.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0022.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0032.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0023.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0033.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0024.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0034.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0025.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0035.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0026.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0036.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0027.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0037.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0028.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0038.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0029.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0039.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0025.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0040.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0026.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0041.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0027.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0042.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0028.jpg')">
+      </div>
+      <div class="image-item">
+        <img src="img/0043.jpg" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0029.jpg')">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 图片预览弹窗 -->
+<div class="image-preview-modal" id="imagePreviewModal">
+  <span class="close-preview" onclick="closeImagePreview()">×</span>
+  <img src="" alt="预览图片" class="preview-image" id="previewImage">
+</div>
+
+<!-- 文章1模态框 -->
+<div class="modal" id="article1">
+  <button class="back-btn" onclick="closeAllModals()">返回</button>
+  <div class="modal-box article-content">
+    <h1>清风</h1>
+    <div class="date">2025 年 12 月 28 日</div>
+    <div class="content">
+—— 献给往日种种
 故事的开头可以是伟大的，也可以是平凡的。这个故事的开头是平凡的，这个故事，也是很普通的。过去的都过去了，但风仍控制不住去回忆曾经的事。算不上朝花夕拾，不过是朝花朝拾，浅浅回忆罢了。梦的开始只是一个无心的意外，一切都是缘分，也只是缘分。
-
 一.
 班主任早已看不惯风天天上课和身边同学闲聊，这天终是忍不住，将他换到了别的位置。风拖着桌子，嘴里骂骂咧咧，可瞧见离相熟的朋友不远时，两人相视一笑。等他落了座，才发现自己就坐在清的正前方，心底又悄悄漾开一抹笑意。风喜欢在学校和朋友待着，家里压抑的空气让他难受，倒不是有什么天大的矛盾，只是那份无趣，总让人喘不过气。能和要好的朋友离得近，自然是高兴的。
 清的数学考得不好，埋着脑袋默默流泪，无暇抬头，自然没留意身前换了人。听着她断断续续的抽泣声，风想着安慰，却又觉得唐突，只是偷偷回头瞥了她一眼。晚饭时，清本就受着头疼的煎熬，又挨了成绩的打击，索性跟老师请假回了家。这天是星期四，风也说不清自己为何偏偏记住了这个日子，或许是晚自习在教室放了电影，或许，只是因为这一天，他坐在了清的正前方。
@@ -526,9 +860,8 @@
 清与风慢慢聊熟了，一种说不清的情愫，在两人心里悄悄生了根。放学路上，清和妈妈聊天，常常提到风的名字，妈妈终于忍不住，盯着她问：「你为什么总是提到那个男生啊？」即便被追问，有时候清还是忍不住，要和妈妈聊几句风的事。深夜里是最安静的时候，风的脑袋是放不空的，满脑子都是清的样子，幻想着这样，幻想着那样。即使觉得这一切都不太可能，他还是喜欢盯着天花板，回忆着白天发生的一点一滴，在脑袋里随意地、虚无缥缈地画一个树状结构，一点一点算着概率：假如...
 以前，周末对风来说是难熬的，漫长得没有尽头，什么玩的都没有；现在，周末变得更加难熬，因为没有她。
 每天中午吃饭，风总是吃得飞快，扒完几口饭就跑回教室，静静地坐在那里写作业。以前吃得快是从小养成的习惯，现在，却多了一点别的心思。即使觉得这想法有点傻，他还是会这么想、这么做。清这天中午吃得很少，面前只有一小块面包。风知道她每天都这样，心里微微发紧，有点心疼，忍不住开口：「你每天就只吃这些吗？」「是啊，没什么的。」清抬眼看他，又啃了口面包。
-
 二.
-体育课和大课间，清总是待在教室里不下去。风也常常劝她，不锻炼一下不行，清每次都连声答应，可下次依旧乖乖待在座位上。这一次体育课，体育老师迟迟不到操场，风在跑道上站得无聊，心里忽然冒出一个念头，想偷偷跑回教室。在楼梯口，风与巡查的老师擦肩而过，他假装没看见，低着头依旧往上走。昏暗的教室里，果然只有清一个人，正埋着头写英语卷子。两人没说太多话，只是简单分了下「任务」：一人完成卷子的一部分。教室很安静，只有窗外的鸟叫声，和操场初一学弟学妹们的喧闹声传进来。忽然，她的一句话，轻轻打断了这份寂静：「风，你有过喜欢的人吗？」这次是风怔住了，他隐约觉得后面的女生等着他说些什么「有价值」的话。怎么能直接说呢，虽然心里早就认定了…… 风有点羞涩，只是笑笑说：
+体育课和大课间，清总是待在教室里不下去。风也常常劝她，不锻炼一下不行，清每次都连声答应，可下次依旧乖乖待在座位上。这一次体育课，体育老师迟迟不到操场，风在跑道上站得无聊，心里忽然冒出一个念头，想偷偷跑回教室。在楼梯口，风与体育老师擦肩而过，他假装没看见，低着头依旧往上走。昏暗的教室里，果然只有清一个人，正埋着头写英语卷子。两人没说太多话，只是简单分了下「任务」：一人完成卷子的一部分。教室很安静，只有窗外的鸟叫声，和操场初一学弟学妹们的喧闹声传进来。忽然，她的一句话，轻轻打断了这份寂静：「风，你有过喜欢的人吗？」这次是风怔住了，他隐约觉得后面的女生等着他说些什么「有价值」的话。怎么能直接说呢，虽然心里早就认定了…… 风有点羞涩，只是笑笑说：
 「小学那时候天天疯玩，哪里有什么喜欢的人。」
 「那你现在呢？」
 「你就当是，有吧……」
@@ -548,7 +881,6 @@
 城市里的夜晚是看不到星星的，只有月光柔柔地洒在走廊上。地上风的影子后面，又挨过来一小片影子，风不用回头，就知道是谁来了。月光把两个人的影子越拉越近，「风，那个钻石用小盒装到底什么意思啊？」风望着清的侧脸，脚步稍稍变慢，慢慢地给她简述那个故事。清听得一头雾水，脑子里一直在思索故事的寓意，一抬头，风已经跑到前面去了。
 几天过去了，晚饭铃响了，浅蓝的天渐渐被暮色浸透，天色沉了下来。风还挂念着那句「我带你去」，看到清旁边的人走开，于是悄悄挨过去，试探着问清：「你去图书馆吗？现在有时间，趁保安没注意，混进去就好了。」
 清的心中一阵欣喜，放下手头的东西就往外跑，回头看了一眼风，又刻意挑了偏一点的楼梯下楼。风当时只以为清是觉得这个楼梯去图书馆更方便，后来才知道，她是为了避开熟悉的同学。清下楼很快，风都有些追不上。看着她转过拐角往前跑的样子，风忽然觉得，离心里期盼的「那样」，好像越来越近了。当他们俩跑到图书馆门口，看到紧锁的门时，脸上都没什么表情，心里却不约而同漫过一阵失望。风只是告诉她：「我每次来都不会锁门啊，也许学校发现我总来，就把门锁了，以后再来吧。」
-
 三.
 全班又一次换座位，风一直揪着心，生怕往斜后方调之后，会和清分开。但令他高兴的是，他们俩依旧挨在一块，坐在教室左边的角落。就是这几个星期，清和风走得越来越近。清这一阵子依然缠着风问东问西，风每次都只是含糊敷衍几句，实在不好意思说得太明白。教室的喧闹声仿佛把这个角落隔成了一个小小的结界，清盯着风出神了好一会儿，轻轻拍拍他的肩：
 「那你毕业之前，会和那个女生表白吗？」
@@ -557,7 +889,7 @@
 风看着她，弯了弯嘴角：「这有什么呢？」
 全市调考一晃就过去了，成绩也出得很快，风和清一个是班上第二，一个是第四。这一天，清上课的时候想了很久，既然彼此的心意都这么明显了，我和他都心知肚明，为什么不主动暗示一下呢？肯定可以的。
 「风，那个女孩的生日是什么时候啊？」
-风回头看着清，发现她竟然还在本子上工工整整记着那些提示，心里一下子漫过一阵甜意，没想到她还把这些都仔仔细细记着。
+风回头看着清，发现她竟然还在本子上记着那些提示，心里一下子漫过一阵甜意，没想到她还把这些都仔仔细细记着。
 「你把这些都写下来，是什么意思啊，别折磨我了。」
 「我就问你几个问题，行吗？」
 「嗯？」
@@ -576,11 +908,9 @@
 清趴在桌上，脸颊红红的，像被什么烫到似的，止不住地笑着。风看着她，两个人的视线撞在一起，都明白自己和对方不仅仅是朋友了。这场没有说出口的告白，竟然就发生在吵闹的教室里。晚春的暖意漫进窗棂，裹着风与清的欢喜，让风忍不住，发自内心地笑了。
 我交了女朋友，这真是，嘻嘻...
 人是会越活越迟钝的，风最近才发现这一点正说明他正变得迟钝。举例来说，你记得什么时候春天会离开吗？风记得，风永远都会记得，那年的四月三十日，春迈开了一只脚，风记住这个日子，确确实实是因为她。
-
 四.
 风每次看着清的背影都把脸偏开，满心都是怀疑，我真的和她谈了？风把这种感觉告诉清，清只是一直笑他，时不时莫名感叹一声「人生如梦」。清有时在下课的时候，就被朋友笑话，像是喝了假酒一样。风也这么觉得，他觉得自己的清像个傻子，一个可爱的傻子。
-风的同桌变成了一个女生。上课的时候，语文老师因班上很多人字写得不好点名要求练字。风清楚自己写作业从来不会写好字，一定会被点。当真被点到名字的时候，同桌笑了，拍了下风的胳膊。风不知道，清在想什么；清有点吃醋了，很想和风说些什么，随便聊什么都可以。下课，风看同桌跑到别处去了，回头看着清，只是「嗯」了一声，可是清就冲着他撒娇了：
-「我都没打她还打上了...」
+风的同桌变成了一个女生。上课的时候，语文老师因班上很多人字写得不好点名要求练字。风清楚自己写作业从来不会写好字，一定会被点。当真被点到名字的时候，同桌笑了，拍了下风的胳膊。风不知道，清在想什么；清有点吃醋了，很想和风说些什么，随便聊什么都可以。下课，风看同桌跑到别处去了，回头看着清，只是「嗯」了一声，可是清就冲着他撒娇了：「我都没打她还打上了...」
 「啊？那你打啊。」
 「我不打。」
 这把风给逗笑了，清还冲我撒娇？
@@ -591,7 +921,7 @@
 清不语，只是笑。风看着她脸上的笑容，又问：「午休？」
 「嗯」
 话都说不清楚，清虽然只是浅浅的笑，但真像喝了假酒，仿佛要一直这么笑下去。
-午休时，安静了很久，风把头悄悄抬起来问清：「你想试一下吗？」这句话把清逗笑了，也把风自己逗笑了。过了会，清把自己的枕头放在侧边挡着其他人，手指上套着笔帽，轻轻碰了一下风的头发。风扭头看了一下清，把手抬起来握住了她的手，但也只握了一下就害羞地缩回去了。清好一会忍不住笑，等到她不笑了，她慢慢地把手伸到风的旁边，故意看着自己的手笑。
+午休时，安静了很久，风把头悄悄抬起来问清：「你想试一下吗？」这句话把清逗笑了，也把风自己逗笑了。清把自己的枕头放在侧边挡着，手指上套着笔帽，轻轻碰了一下风的头发。风扭头看了一下清，把手抬起来握住了她的手，但也只握了一下就害羞地缩回去了。清好一会忍不住笑，等到她不笑了，她慢慢地把手伸到风的旁边，故意看着自己的手笑。
 两个人的手放在了一起，直到打铃。
 下午的历史课和语文课，风与清竟是十指相扣度过的；如果说上课可以是幸福的，那一定就是这样的...
 班主任还是看到他俩坐在一起，问了几句，没有多说什么；可下课的时候风的朋友都快把他笑死了，引用一些闻所未闻的文言文开风的玩笑。
@@ -599,13 +929,11 @@
 「算了」
 「为什么算了？」
 这次把风听笑了，风故意学着清说「为什么算了」，打趣了她好多天。
-
 五.
 五月二十日，清想给风写一封情书。《怦然心动》挺好，嗯，还有「金风玉露...」。是的呀，他的出现仿佛让我的天空高悬起彩虹。第二天，清才把这第一封情书送给风。那一天，风在上课的时候总是偷偷看两眼清娟秀的字迹，闭着眼感受字里行间的爱。
 「斯人若彩虹，遇上方知有」
 课间真是一个有趣的时候。这天课间，一个在谈恋爱男生和风与清提到他想抱自己的女朋友，清悄悄和风说：「抱一下可以试试，抱起来就算了。」
 放学，清和风走到一处天台，风开始期待清能提起那个话题。清把两只手抬着，无来由的对风说：「我准备好了。」这句奇怪的话让风笑得快倒在地上。扭扭捏捏的，两个人慢慢抱在一起，风渐渐可以闻到清身上的香味，脸颊被她的头发蹭的发痒。清甚至感受到了风的心跳，重重的一下，把暖流涌进了清的心里。只是一下下，清就突然把风放开。风感到可惜，甚至有点责怪清为什么连一秒钟都没抱到就松了... 因为清直到和风抱在一起才意识到这个事情。清回家的路上一直在回味刚刚的事情，打开手机，发出一条「今晚夜色真美」的动态，静静地想着那个他。风平常看着不会傻笑，其实当他一个人的时候，就总是自言自语，能为一个小瞬间笑上半天。刚才是两个人第一次拥抱，虽然只有零点几秒的时间，但这轻轻一触的意义是不同寻常的。
-
 六.
 风和清的事连班主任也知道了。
 散步到办公室门口，风对着清开玩笑：
@@ -617,7 +945,6 @@
 这也算好的，没过几天，在化学课上，班主任当着全班面把清和风叫出去谈话。
 这下坏了，都知道了。连政治老师看到他们两个时都说：「前天我吃到你们两个的瓜...」
 风和清互相安慰说，等三十多天就毕业了，没事的。
-
 七.
 毕业前，学校有一场音乐会，风和清想在六点混在初一里面溜出校门，九点回到校门口。
 昂着头，风和清一本正经地走出校门。见小计谋得逞，清带着风往左边跑了好久才停下。两个人相视一笑，风高兴地说：
@@ -625,7 +952,6 @@
 「今天是我毕业之前最开心的一天，真的。」
 并没有明确的目的地，风只是笨拙地拿着指南针指方向，清就跟在旁边。清偷偷地把风的手牵上，把一个草莓干塞到风的嘴边。风一直不愿意张嘴，反而拿着草莓干往清的嘴里塞。清吃了几个，于是拿起一个硬要往风嘴里塞。夜已经深了，偏僻的街道没有灯，昏暗之下，风把嘴张开一点点，轻轻抿住清指尖的那个草莓干。草莓的清甜，夹杂着清指尖的香气，飘进风的心里。
 这是清第一次和风一起出去，时间挺长，因为有三个小时；时间飞逝，因为有风在身边。
-
 八.
 风偷偷拿到了家长不用的手机登上QQ。家里没有人，可以肆无忌惮了。在班级群找到那个熟悉的名字，风发现可以看她的动态，一阵窃喜。呵，还发什么「谁在谈啊」；还有这些自拍，跟妖精一样；还有那天考试午休在草稿纸上下的五子棋...
 消息提示弹下来，清看了一眼，是有一个人写了好几条评论。咦？这个QQ不是风的吗？他不是说这个QQ被他家长控制着不能用吗？
@@ -637,7 +963,6 @@
 清截了一张「一起听歌时长两百二十分钟」的图，配文「这是谁啊」，作为动态发出去，发完还忍不住笑，反复「欣赏」这条动态。
 「风赞了你的说说」
 这是清见到的唯一能和她一样恋爱脑的男生。
-
 九.
 分数线出来了，清和风不会在一个高中了。
 清哭了，为这个结果，也为自己的未来。
@@ -647,7 +972,6 @@
 回家之后，风在QQ里开玩笑地说：
 「我想把我们的CW留在樱花树下」
 「花了六秒钟看懂了」
-
 十.
 「我们去公园吧」
 清把风带到图书馆旁边的公园，没有走的很深，只是寻到一个长椅就坐在那了。茂密的树叶底下，一丝一丝漏下来的日光照在有些发干的泥土上，热得清的脸颊泛起一片红。清看着风的脸，抿了抿嘴，想说些什么又说不出口。
@@ -662,90 +986,40 @@
 「你要是再躲，我就真那么干了。」
 「那我还是躲吧。」
 这句话的结果就是，清突然凑上来，对着风的脸吻了两下。她的吻，像是羽毛一样轻轻地在风的脸上散开，让他整颗心都荡漾在幸福之中。
-
 十一.
 爱一个人就像是贪心算法，每一步都是做出当下最优的选择，却不知道走到最后时不时全局的最优解。
 清的妈妈不再让清和风联系了，还给清在外面报了培训班。清和风依旧偷偷用「数据删除」保持联系，风也常常在星期天中午去和清见面。即使只是短暂的一小时也是值得的，过了三年一切都会好的。
-上次出来清
-送给风的手绳，是清在网上找教学、买毛线，自己编的一条手绳。它的名字是「莫相离」，藏着的是清好几个小时的汗水和对风深深的爱。风戴上这个有点小的手绳时，言语所不能及的感觉让他感动不已，只想紧紧地搂住面前的女孩。
+上次出来清送给风的手绳，是清在网上找教学、买毛线，自己编的一条手绳。它的名字是「莫相离」，藏着的是清好几个小时的汗水和对风深深的爱。风戴上这个有点小的手绳时，言语所不能及的感觉让他感动不已，只想紧紧地搂住面前的女孩。
 早已是深秋了，骑在前往她的补习班的路上，凛冽的寒风刺着他的手。风并不知道这会是两个人最后一次见面，只是最近心情不好，只有清可以懂自己。
 清带着风四处晃，给他讲最近有趣的事。一个小时在这两个人身上过得很快，清站在楼梯上冲着风笑了一下：「拜拜」。风看着清离去的背影，一阵心暖。
 回忆起刚刚，清隐约觉得风的心情不对，就在下课之后发消息说，直觉觉得他最近不是很开心。
 清似乎也并不懂风的心了，风的心太乱了。
-
 十二.
 清的妈妈发现清还在和风联系，那天晚上很生气，要求清必须和风断掉关系。迫于无奈，清只好给风发去消息：
-
 「我们分手吧」
-
 脑子里全是空白，零零散散的都是妈妈对自己说的话。缩在被子里哭泣了很久，清的思绪挤满叹息与无奈。阴天的云把月亮遮住了，月光不再照着清的脸颊了。如果一切都没有结果，那我们还是远离比较好。我无能为力，现实的打击把我们分开，家长的反对又是一道无法跨越的沟。我还想像第一次一样感受他的心跳，像跟那天历史语文课一样牵着他的手不放，想看着他的脸偏开偷偷地亲上去...但我只能希望一切都能好，希望他也能好，所以我们还是分开吧，曾经的约定，就和月光一起埋没在云层之中吧。
 第二天清晨，清发过去长长的话，把自己想说的、最后的话一股脑发过去，最后只是留下一句：
-「再见，」
-看到清发来的消息，风只是在心中无声地吼。不过是个废物罢了，都这样了，不也是我害的吗？我们的爱情不过是一场没有返回值的递归，纵我等到TLE也不会再有结果。还说什么呢，我不会再遇到这般美好了，这是只有那个傻子才能给的，只有风心中的那个清才能给的。说好的胜却人间无数，说好不会先放手的，说好一起看樱花的，说好的樱花树下那个吻呢...你说的最后一句「再见，」打的是逗号对吧？才发现手腕上的手绳断了一截线头，不禁想起，莫相离吗...
+「拜拜，」
+看到清发来的消息，风只是在心中无声地吼。不过是个废物罢了，都这样了，不也是我害的吗？我们的爱情不过是一场没有返回值的递归，纵我等到TLE也不会再有结果。还说什么呢，我不会再遇到这般美好了，这是只有那个傻子才能给的，只有风心中的那个清才能给的。说好的胜却人间无数，说好不会先放手的，说好一起看樱花的，说好的樱花树下那个吻呢...你说的最后一句「拜拜，」打的是逗号对吧？才发现手腕上的手绳断了一截线头，不禁想起，莫相离吗...
 剩下的只是两人无声的叹息。
-
-
 尾声.
 爱过，被爱过，一切都是值得的；
 梦了，醒了，过去的就都过去了；
 但是这份爱是永远不会被抹去的。
-
-if(You.arehere())
-return true;
-但这个函数的返回值永远不会是1了。
-
+if(You.arehere())return true;但这个函数的返回值永远不会是1了。
 可惜秦观的「两情若是久长时，又岂在朝朝暮暮」不过是梦罢了，梦迟早都是要醒的。
-            </div>
-        </section>
+    </div>
+  </div>
+</div>
 
+<!-- 文章2模态框 -->
+<div class="modal" id="article2">
+  <button class="back-btn" onclick="closeAllModals()">返回</button>
+  <div class="modal-box article-content">
+    <h1>可乐博弈（待续）</h1>
+    <div class="date">2026 年 1 月 18 日</div>
+    <div class="content">
 
-        <!-- 过往云烟文章区域 -->
-        <section class="content-section section-article" id="section-gwyy">
-            <h2 class="section-title title-red">《过往云烟》</h2>
-            <div class="article-content">
-            云常常怀念他在初中的日子，仅在半年之前他还是个快乐的少年，渐渐地，他看向窗外的月，愁的滋味在他心底晕开。枕头震了震，朋友发来消息：出来聚会，我叫了所有的初中同学哦。他的嘴唇翘起，久违的笑了。
-            不知谁，领着大家玩游戏，云自然是输了。几个人笑着，起哄让他穿JK拍照，然后发在网上。他的脸羞得绯红，推搡着不愿意穿。云生的面目清秀，皮肤光滑细腻看的比女生可爱，也就成了初中的班花，难看出是男生。大家推着、怂恿着，不知从哪翻出来一套衣服，明显是 早在预谋 。一杯杯鸡尾酒被灌下去，本就酒量不好的他抱着衣服迷迷糊糊的走向了卫生间。他捏着裙边，感受着这别样的材质，脸热得发烫，羞涩的笑了。理了下衣领，挽挽假发，看着镜中那个女孩子，一股别样的感觉涌上心头，好可爱呀。门被推开，闪光灯晃住了云的眼。很快朋友们把他的照片上传了，嘻嘻的笑着：云好可爱啊...云只希望那张照片无人理睬，也就算了。酒精上来了，云的眼糊了。
-            深夜，烟无聊的翻着手机，想找找不定方程看着玩，突然，他的手停住了。一个女孩的眼睛吸住了他，那个女孩的眼神中满是羞涩与甜意，与其他矫揉造作的妖精可不同，烟已经被那个女孩吸引住了。烟给她发了句，好可爱。并未想多，看着天花板，却仍多想，想着那个女孩。
-            云打开手机，发现竟然有人发来消息。可爱？云的脸又一次红了，写下又删除，犹犹豫豫，他终于回信说：我是男生，是游戏输了才被迫这样的.....没曾想，手指刚挪至左上角，对面发来：哈哈哈，看得出来你是被迫的，你是高几？叫你学妹还是学姐呢？学妹，学姐？云的心乱了，很想解释几句。
-            烟：我叫烟，才上高二，你？
-            烟：看得出来你和其他女孩不同...
-            云彻底乱了，但和烟聊着聊着也就忘了澄清自己是男孩子的事。云发现，他和烟有很多很多共同点，有很多可说的话。烟身上的一种感觉也让云有点别样的情愫。云渐渐不想失去这个朋友，轻咬着自己的嘴唇，他也就无所谓了对面认为自己是女生。
-            烟：你那边冷吗，快十二月了，记得加衣服。[微笑]
-            云：嗯。
-            烟：你知道吗，再过几个月，樱花便开了，我们去看吧。
-            云：消息已撤回
-            烟：嗯？
-            云：我说，可以呀。
-            烟：云，我喜欢你，你，看得出来吗？
-            看到这条，云怔住了。烟？不，我并不希望失去这个朋友...不行，我是男孩子啊，忘了和他说了。那要是说了，他会不会认为我在耍他？他那么懂我，我也依恋他...那我就，就随着他吧...
-            烟期待着，害怕着，手指随意的上下滑动屏幕，等着那一句
-            云：烟。我也喜欢你，
-            烟也怔住了，我谈恋爱了？这已经是最棒的高中生活了。烟依旧没缓过来，盯着那几个字。“喜欢你”是有分量的字，是的，拥有你就，拥有全世界.....
-            烟：我，还能看看你的照片吗？
-            烟：云？
-            烟：消息已撤回
-            烟：对不起，我冒昧了。
-            云慌了，但他从柜子里面掏出上次那套JK和假发，简单打扮下，就已经出落得很漂亮了。这样好吗？云犹豫了，但他又想，我还想和他当朋友，我还想...我离不开他。
-            云：[图片]
-            云等着他的回复，怕烟说些什么。
-            烟：那，我是不是应该改口，我们重新认识。
-            烟：女朋友.
-            云的思绪飘走了，他心中最柔软的地方被触动，抱了抱胸口的被子，腿也不安地扭了扭。
-            烟经常说些让云害羞的话，诸如：
-            亲你...
-            云想，你总欺负我脸皮薄，哼...矫情的云常常冲烟撒娇，烟很喜欢回味云的每句话，然后傻傻的笑着，在脑中描摹着女朋友的模样。
-            烟想突然找到云的学校，给她一个大大的惊喜。于是乘着月色，他从别处飞往云的城市。毕竟放假了，烟的家长也支持他自己出去旅游，烟就到了。保安管的并不多，烟很轻松的进去了。顺着云在网上描绘的样子，他很轻松找到云的班。不远处站着个学生，他的身子很像云：你好，你认识云吗？旁边一个人笑着说，你扯住的人就是啊。
-            云扭过头，他惊呆了，没想到烟会来，直接找到他....云的眼泪在打转。他害怕烟生气，他害怕失去烟，失去他的朋友，失去他的...哽咽着，云解释说：我不是故意的...我害怕，我害怕，我怕我失去你。烟并不生气，他的眼底透着一丝温柔，仍旧充满着情感。烟搂住云的腰：你知道错了？没事的，我的.....云不再哭了，脸偏向一边。烟温柔地说：脸偏过来。云怔怔的，把脸转过去。猛然间，烟的脸贴上去，嘴唇贴在一起，轻轻旋了三十度，时间凝固，风撩起云的刘海，烟给了云一个深深的吻，他们俩的初吻...慢慢的，两人把脸分开，
-            烟说：走吧，去你家。
-            我家？
-            总不能睡在学校吧...
-            背后的灯，城市的霓虹，映着他俩人的背影，模糊，消散......
-            </div>
-        </section>
-
-        <section class="content-section section-article" id="section-klby">
-            <h2 class="section-title title-red">《可乐博弈(未完)》</h2>
-            <div class="article-content">
 
 下午下课铃声刚落下，走廊里就传来了纸箱摩擦地面的沉闷声响。我趴在桌上，指尖无意识地划过数学练习册上未解开的函数题，余光却精准捕捉到了门口的动静——班主任抱着一个印着红色可乐标志的大纸箱，额角挂着汗珠，脚步沉重地走进了教室。阳光透过窗户斜切进来，在纸箱表面投下明暗交错的光影，罐身碰撞的清脆声从里面隐约传来，像一串诱人的密码。
 
@@ -944,13 +1218,18 @@ return true;
 
 夜色渐浓，晚风带着一丝凉意。我抬头看着天空，星星在云层中闪烁。这场发生在教室里的可乐博弈，就像一场微型的战场。没有绝对的对错，只有永恒的利益和智慧的较量。谁能掌握更多的信息，谁能精准地洞察人心，谁就能成为最终的赢家。
 
-            </div>
-        </section>
-        
-        <!-- 杠十细胞（残缺）文章区域 -->
-        <section class="content-section section-article" id="section-gsxb">
-            <h2 class="section-title title-red">《杠十细胞（残缺）》</h2>
-            <div class="article-content">
+    </div>
+  </div>
+</div>
+
+<!-- 文章3模态框 -->
+<div class="modal" id="article3">
+  <button class="back-btn" onclick="closeAllModals()">返回</button>
+  <div class="modal-box article-content">
+    <h1>杠十细胞（残缺）</h1>
+    <div class="date">2025 年 11 月 16 日</div>
+    <div class="content">
+
             叠甲：本人生物蒟蒻，有错请喷；甄士隐贾雨村；故事玄乎，文笔极烂。
             离细胞分裂还有一百多天，细胞里的生活依旧如此，平淡又不失韵味。各个细胞器活性检测成绩理想，而我呢，作为复杂扭曲的内质网依旧摆烂。我身边的朋友，花里胡哨，往后会一一细说。
             上课真是最坐牢的时光，少不了一个聊天搭子。以我这魔性馕状道管结构，在哪安身都有人可聊。我的斜后桌平常也打乒乓球（细胞基质那么多水，这球咋打的不必管），也就有了一个话题；最关键的是，他也聊少啊....上课总讲话，所以乐极生悲，细胞核把我座位调走了。但正是这一调，也就祸中有福，坐在了线粒体斜前方、核糖体正前方。仍记得那天晚饭时，我在加工蛋白质，核糖体因数学90外加头疼，双喜临门请假回家。噫，她...嗯，这边也挺好。第二天依旧平淡，但也不淡，核糖体找我借笔；interesting，她旁边不是有别的细胞器吗？
@@ -969,41 +1248,65 @@ return true;
             体育课我下去没看到老师就偷偷回到教室，其实主要是想回来...核糖体总不上体育课躲教室里，真是懒啊，怪不得核糖体那么小。记得蛮清楚啊，我回来写英语卷子，她问我，有喜欢的人吗？真搞笑，肯定有啊。三思，我只得说我‘有过’。然后她*的说了好几节课有问题，我觉得，她也有问题.....后面几天她还常常试探，这些内容怎么方便讲呢？所以打住打住，聊聊别的。
             但...其实别的也没什么可说了，在细胞分裂倒计时最后50多天到时出了不少有趣的事，没必要都讲出来。时间拉到细胞分裂那些天。细胞分裂并不是件好事，大部分细胞器都留下了，可恶的中心体笑里藏刀，把我以及一些其他细胞器分到新细胞去。但是呢，交流多的那些细胞器都已不在身边，现在就只剩我一个呆在这无聊的地方。
             现在也是...）
-            </div>
-        </section>
+    </div>
+  </div>
+</div>
 
-        <!-- 星月夜文章区域 -->
-        <section class="content-section section-article" id="section-xyy">
-            <h2 class="section-title title-red">《星月夜》</h2>
-            <div class="article-content">
-夜空中最亮的星星，是月亮的，对吧？
-星从小就招人喜欢，她的眼睛里仿佛确实透着星光，一举一动都很可爱；等到了中学，依旧小巧的她招来许多人的倾慕，她的心里却觉得烦。
-开学了，她抱着一大摞书跑来跑去，却撞到了月。月在女生中长得算高的，优雅的举止中尽是御姐气质。她被撞歪在一边，但并没说什么，很快帮星捡起地上的书，杂七杂八的书里，甚至连月也喜欢学的 [数据删除] 都有。
-“额” 星慌了神，脸涨得泛红，手停在空中不知所措地比划，“对不起，你受伤了吗？”
-星的样子把月看笑了，可这让星更慌了。月连忙告诉她，并没有什么事，心里也对这个可爱的女孩留下了印象。
-“很高兴认识你，你是叫‘星’吗？你的名字和你一样，清澈，挺可爱的...”
-星虽脸红了，但她很高兴第一天能认识一个朋友。巧的是，她俩的座位在一起，第一天就说了很多话。月比星大近一年，所以星喜欢叫她姐姐。星很少能交到这么好的朋友，所以总爱跟月扒拉在一起，抓着月的手不肯放开。月也就索性反抓过星的手，一甩一甩的，觉得好玩。要是说到什么把星惹羞了，她常会抱着月的胳膊撒娇；要是把月说羞了，月就轻轻薅星的头发 —— 因为她的头发真的好香、好软，像是轻柔的花瓣，引得月总爱凑上去闻。
-放假的时候，两人的 QQ 从没闲着。她们一开始喜欢互相发些有趣的表情包，或是月给星分享自己喜欢的小说，星会认真地把每本小说读完，因为它们确实好看，也因为..... 这毕竟是月给的嘛... 月渐渐也离不开这个粘人的小东西了，虽然.... 但她真的好可爱、好招人喜欢啊。
-月：你有过喜欢的人吗？
-星：嗯... 没有呀，没想过这些。
-月：[唐人表情]
-这几天聊天后，总勾得星望向窗外，口中喃喃地念着‘月’；仿佛是量子超距作用一般，月也会望着窗外，看着与星欣赏的同一片夜色。夜色，也许确实因为她们，变得更纯粹、更绚烂了。
-一起在操场上散步的时候，月喜欢盯着星的笑脸，那灿烂的笑容，确实像天上的星星一样，能抵达她的心灵深处。星有时光是看着月，就会傻傻地笑，觉得自己黏上了月，越来越离不开她了。
-“呐，你看到蒲公英了吗？你知道蒲公英的花语吗？”
-星听得愣愣的，弯下身子，小心地捧住一撮飘着的蒲公英，呆呆地笑。良久，她盯着蒲公英，头也不抬地问：“不知道呀，你知道吗？”
-“我也不知道.... 那.... 我们也能像风与蒲公英一样永远在一起吗？”
-星痴痴地笑了，往前跑了几十米，又回过头像月招手：“姐姐，那我们把蒲公英送得更远吧！”
-那一晚的星空格外特别，满天繁星在打转，圆月的光照着她二人的侧脸。星怯怯地问了句：“月，所以，你不光是我的姐姐？” 月没说话，而是牵起星的手 —— 只不过这次，她们是十指相扣，都感受着彼此的温度。
-第二天月一到学校，星就送给她一小幅画，画的是一棵樱花树，满纸的粉嫩触动了月的心。她从后面抱住星，凑近她的耳根说：“那我们一起去看吧，浑身洒满樱花的你，一定会很可爱的。” 星嘻嘻地钻进月的怀里，与她紧紧抱在一起，笑个不停。
-等到真去看樱花的那一天，春天的风轻柔和缓，吹得樱花簌簌飘落，也抚摸着星与月的脸颊。星的脸一定是被樱花映得粉粉的吧，月怀着别样的情愫，望着星可爱的样子。终于，月忍不住了，把星按在旁边的樱花树上。这冷不丁的举动让星轻哼了一声，却也只哼了半声 —— 因为此刻，月的唇已经覆上了星的唇呀～
-风稍稍大了些，吹起二人的刘海，与漫天花瓣缠在一起，泛着她们独有的香气呢...
-            </div>
-        </section>
+<!-- 文章4模态框 -->
+<div class="modal" id="article4">
+  <button class="back-btn" onclick="closeAllModals()">返回</button>
+  <div class="modal-box article-content">
+    <h1>过往云烟</h1>
+    <div class="date">2025 年 11 月 29 日</div>
+    <div class="content">
+            云常常怀念他在初中的日子，仅在半年之前他还是个快乐的少年，渐渐地，他看向窗外的月，愁的滋味在他心底晕开。枕头震了震，朋友发来消息：出来聚会，我叫了所有的初中同学哦。他的嘴唇翘起，久违的笑了。
+            不知谁，领着大家玩游戏，云自然是输了。几个人笑着，起哄让他穿JK拍照，然后发在网上。他的脸羞得绯红，推搡着不愿意穿。云生的面目清秀，皮肤光滑细腻看的比女生可爱，也就成了初中的班花，难看出是男生。大家推着、怂恿着，不知从哪翻出来一套衣服，明显是 早在预谋 。一杯杯鸡尾酒被灌下去，本就酒量不好的他抱着衣服迷迷糊糊的走向了卫生间。他捏着裙边，感受着这别样的材质，脸热得发烫，羞涩的笑了。理了下衣领，挽挽假发，看着镜中那个女孩子，一股别样的感觉涌上心头，好可爱呀。门被推开，闪光灯晃住了云的眼。很快朋友们把他的照片上传了，嘻嘻的笑着：云好可爱啊...云只希望那张照片无人理睬，也就算了。酒精上来了，云的眼糊了。
+            深夜，烟无聊的翻着手机，想找找不定方程看着玩，突然，他的手停住了。一个女孩的眼睛吸住了他，那个女孩的眼神中满是羞涩与甜意，与其他矫揉造作的妖精可不同，烟已经被那个女孩吸引住了。烟给她发了句，好可爱。并未想多，看着天花板，却仍多想，想着那个女孩。
+            云打开手机，发现竟然有人发来消息。可爱？云的脸又一次红了，写下又删除，犹犹豫豫，他终于回信说：我是男生，是游戏输了才被迫这样的.....没曾想，手指刚挪至左上角，对面发来：哈哈哈，看得出来你是被迫的，你是高几？叫你学妹还是学姐呢？学妹，学姐？云的心乱了，很想解释几句。
+            烟：我叫烟，才上高二，你？
+            烟：看得出来你和其他女孩不同...
+            云彻底乱了，但和烟聊着聊着也就忘了澄清自己是男孩子的事。云发现，他和烟有很多很多共同点，有很多可说的话。烟身上的一种感觉也让云有点别样的情愫。云渐渐不想失去这个朋友，轻咬着自己的嘴唇，他也就无所谓了对面认为自己是女生。
+            烟：你那边冷吗，快十二月了，记得加衣服。[微笑]
+            云：嗯。
+            烟：你知道吗，再过几个月，樱花便开了，我们去看吧。
+            云：消息已撤回
+            烟：嗯？
+            云：我说，可以呀。
+            烟：云，我喜欢你，你，看得出来吗？
+            看到这条，云怔住了。烟？不，我并不希望失去这个朋友...不行，我是男孩子啊，忘了和他说了。那要是说了，他会不会认为我在耍他？他那么懂我，我也依恋他...那我就，就随着他吧...
+            烟期待着，害怕着，手指随意的上下滑动屏幕，等着那一句
+            云：烟。我也喜欢你，
+            烟也怔住了，我谈恋爱了？这已经是最棒的高中生活了。烟依旧没缓过来，盯着那几个字。“喜欢你”是有分量的字，是的，拥有你就，拥有全世界.....
+            烟：我，还能看看你的照片吗？
+            烟：云？
+            烟：消息已撤回
+            烟：对不起，我冒昧了。
+            云慌了，但他从柜子里面掏出上次那套JK和假发，简单打扮下，就已经出落得很漂亮了。这样好吗？云犹豫了，但他又想，我还想和他当朋友，我还想...我离不开他。
+            云：[图片]
+            云等着他的回复，怕烟说些什么。
+            烟：那，我是不是应该改口，我们重新认识。
+            烟：女朋友.
+            云的思绪飘走了，他心中最柔软的地方被触动，抱了抱胸口的被子，腿也不安地扭了扭。
+            烟经常说些让云害羞的话，诸如：
+            亲你...
+            云想，你总欺负我脸皮薄，哼...矫情的云常常冲烟撒娇，烟很喜欢回味云的每句话，然后傻傻的笑着，在脑中描摹着女朋友的模样。
+            烟想突然找到云的学校，给她一个大大的惊喜。于是乘着月色，他从别处飞往云的城市。毕竟放假了，烟的家长也支持他自己出去旅游，烟就到了。保安管的并不多，烟很轻松的进去了。顺着云在网上描绘的样子，他很轻松找到云的班。不远处站着个学生，他的身子很像云：你好，你认识云吗？旁边一个人笑着说，你扯住的人就是啊。
+            云扭过头，他惊呆了，没想到烟会来，直接找到他....云的眼泪在打转。他害怕烟生气，他害怕失去烟，失去他的朋友，失去他的...哽咽着，云解释说：我不是故意的...我害怕，我害怕，我怕我失去你。烟并不生气，他的眼底透着一丝温柔，仍旧充满着情感。烟搂住云的腰：你知道错了？没事的，我的.....云不再哭了，脸偏向一边。烟温柔地说：脸偏过来。云怔怔的，把脸转过去。猛然间，烟的脸贴上去，嘴唇贴在一起，轻轻旋了三十度，时间凝固，风撩起云的刘海，烟给了云一个深深的吻，他们俩的初吻...慢慢的，两人把脸分开，
+            烟说：走吧，去你家。
+            我家？
+            总不能睡在学校吧...
+            背后的灯，城市的霓虹，映着他俩人的背影，模糊，消散......
+    </div>
+  </div>
+</div>
 
-        <!-- 金风玉露文章区域 -->
-        <section class="content-section section-article" id="section-jfyl">
-            <h2 class="section-title title-red">《金风玉露》</h2>
-            <div class="article-content">
+<!-- 文章5模态框 -->
+<div class="modal" id="article5">
+  <button class="back-btn" onclick="closeAllModals()">返回</button>
+  <div class="modal-box article-content">
+    <h1>金风玉露</h1>
+    <div class="date">2025 年 12 月 17 日</div>
+    <div class="content">
 绍圣三年，新旧党的浪潮终究是不会放过秦观的，秦观被贬南下。
 “这就是长沙吗？”
 像长沙这种偏远的地方，秦观并不抱很大兴趣，带上行囊，他只准备四处晃晃，领略下风土人情，就可以继续南下了。
@@ -1036,192 +1339,189 @@ return true;
 那一句，金风玉露一相逢，便胜却人间无数。
 那一句，两情若是久长时，又岂在朝朝暮暮。
 全都融进秦观手中的银钗去了。
-            </div>
-        </section>
-    </main>
-
-<div class="password-modal" id="pwdModal">
-    <div class="modal-content">
-        <h3>付费内容，付钱得密码</h3>
-        <input type="password" id="pwdInput" placeholder="密码">
-        <div>
-            <button id="confirmPwd">入</button>
-            <button id="cancelPwd">哟哟~</button>
-        </div>
     </div>
+  </div>
 </div>
 
-<!-- 图片放大预览弹窗 新增结构 -->
-<div class="img-preview-modal" id="imgPreviewModal">
-    <img src="" alt="预览图" class="preview-img" id="previewImg">
+<!-- 文章6模态框 -->
+<div class="modal" id="article6">
+  <button class="back-btn" onclick="closeAllModals()">返回</button>
+  <div class="modal-box article-content">
+    <h1>星月夜</h1>
+    <div class="date">2025 年 12 月 8 日</div>
+    <div class="content">
+夜空中最亮的星星，是月亮的，对吧？
+星从小就招人喜欢，她的眼睛里仿佛确实透着星光，一举一动都很可爱；等到了中学，依旧小巧的她招来许多人的倾慕，她的心里却觉得烦。
+开学了，她抱着一大摞书跑来跑去，却撞到了月。月在女生中长得算高的，优雅的举止中尽是御姐气质。她被撞歪在一边，但并没说什么，很快帮星捡起地上的书，杂七杂八的书里，甚至连月也喜欢学的 [数据删除] 都有。
+“额” 星慌了神，脸涨得泛红，手停在空中不知所措地比划，“对不起，你受伤了吗？”
+星的样子把月看笑了，可这让星更慌了。月连忙告诉她，并没有什么事，心里也对这个可爱的女孩留下了印象。
+“很高兴认识你，你是叫‘星’吗？你的名字和你一样，清澈，挺可爱的...”
+星虽脸红了，但她很高兴第一天能认识一个朋友。巧的是，她俩的座位在一起，第一天就说了很多话。月比星大近一年，所以星喜欢叫她姐姐。星很少能交到这么好的朋友，所以总爱跟月扒拉在一起，抓着月的手不肯放开。月也就索性反抓过星的手，一甩一甩的，觉得好玩。要是说到什么把星惹羞了，她常会抱着月的胳膊撒娇；要是把月说羞了，月就轻轻薅星的头发 —— 因为她的头发真的好香、好软，像是轻柔的花瓣，引得月总爱凑上去闻。
+放假的时候，两人的 QQ 从没闲着。她们一开始喜欢互相发些有趣的表情包，或是月给星分享自己喜欢的小说，星会认真地把每本小说读完，因为它们确实好看，也因为..... 这毕竟是月给的嘛... 月渐渐也离不开这个粘人的小东西了，虽然.... 但她真的好可爱、好招人喜欢啊。
+月：你有过喜欢的人吗？
+星：嗯... 没有呀，没想过这些。
+月：[唐人表情]
+这几天聊天后，总勾得星望向窗外，口中喃喃地念着‘月’；仿佛是量子超距作用一般，月也会望着窗外，看着与星欣赏的同一片夜色。夜色，也许确实因为她们，变得更纯粹、更绚烂了。
+一起在操场上散步的时候，月喜欢盯着星的笑脸，那灿烂的笑容，确实像天上的星星一样，能抵达她的心灵深处。星有时光是看着月，就会傻傻地笑，觉得自己黏上了月，越来越离不开她了。
+“呐，你看到蒲公英了吗？你知道蒲公英的花语吗？”
+星听得愣愣的，弯下身子，小心地捧住一撮飘着的蒲公英，呆呆地笑。良久，她盯着蒲公英，头也不抬地问：“不知道呀，你知道吗？”
+“我也不知道.... 那.... 我们也能像风与蒲公英一样永远在一起吗？”
+星痴痴地笑了，往前跑了几十米，又回过头像月招手：“姐姐，那我们把蒲公英送得更远吧！”
+那一晚的星空格外特别，满天繁星在打转，圆月的光照着她二人的侧脸。星怯怯地问了句：“月，所以，你不光是我的姐姐？” 月没说话，而是牵起星的手 —— 只不过这次，她们是十指相扣，都感受着彼此的温度。
+第二天月一到学校，星就送给她一小幅画，画的是一棵樱花树，满纸的粉嫩触动了月的心。她从后面抱住星，凑近她的耳根说：“那我们一起去看吧，浑身洒满樱花的你，一定会很可爱的。” 星嘻嘻地钻进月的怀里，与她紧紧抱在一起，笑个不停。
+等到真去看樱花的那一天，春天的风轻柔和缓，吹得樱花簌簌飘落，也抚摸着星与月的脸颊。星的脸一定是被樱花映得粉粉的吧，月怀着别样的情愫，望着星可爱的样子。终于，月忍不住了，把星按在旁边的樱花树上。这冷不丁的举动让星轻哼了一声，却也只哼了半声 —— 因为此刻，月的唇已经覆上了星的唇呀～
+风稍稍大了些，吹起二人的刘海，与漫天花瓣缠在一起，泛着她们独有的香气呢...
+  </div>
+</div>
+
+<!-- 文章7模态框 -->
+<div class="modal" id="article7">
+  <button class="back-btn" onclick="closeAllModals()">返回</button>
+  <div class="modal-box article-content">
+    <h1>正在酝酿</h1>
+    <div class="date">2026 年 2 月 13 日</div>
+    <div class="content">
+看看别的吧...
+那么多好看的
+    </div>
+  </div>
+</div>
+
+<!-- 文章8模态框 -->
+<div class="modal" id="article8">
+  <button class="back-btn" onclick="closeAllModals()">返回</button>
+  <div class="modal-box article-content">
+    <h1>正在酝酿...</h1>
+    <div class="date">2026 年 2 月 13 日</div>
+    <div class="content">
+可以给我投稿...
+必须好文章
+    </div>
+  </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    
-    const navLinks = document.querySelectorAll('.nav-link');
-    const contentSections = document.querySelectorAll('.content-section');
-    const pwdModal = document.getElementById('pwdModal');
-    const pwdInput = document.getElementById('pwdInput');
-    const confirmPwd = document.getElementById('confirmPwd');
-    const cancelPwd = document.getElementById('cancelPwd');
-    const imagesLink = document.querySelector('[data-target="section-images"]');
-    const imagesSection = document.getElementById('section-images');
-    const CORRECT_PWD = '110101100';//好吧，明文密码被你发现了
-    // 3. 默认显示首页
-    showSection('section-home');
+const CORRECT_PASSWORD = '110101100';
 
-    // 4. 侧边栏导航点击事件
-    navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault(); // 阻止默认锚点跳转
-            const targetId = this.getAttribute('data-target');
-            
-            // 如果点击的是好图区域，弹出密码框
-            if (targetId === 'section-images') {
-                showPasswordModal();
-                return;
-            }
-            
-            // 其他区域正常显示
-            showSection(targetId);
-        });
-    });
+// 打开模态框
+function openModal(id) {
+  closeAllModals();
+  const modal = document.getElementById(id);
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+  // 移动端滚动到顶部
+  modal.querySelector('.modal-box').scrollTop = 0;
+}
 
-    confirmPwd.addEventListener('click', function() {
-        const inputVal = pwdInput.value.trim();
-        
-        if (!inputVal) {
-            alert('密码');
-            pwdInput.focus();
-            return;
-        }
-        if (inputVal === CORRECT_PWD) {
-            hidePasswordModal();
-            setTimeout(() => {
-                showSection('section-images');
-                // 滚动到图片区域顶部
-                imagesSection.scrollIntoView({ behavior: 'smooth' });
-            }, 300);
-            pwdInput.value = ''; // 清空输入框
-        } else {
-            alert('乐子');
-            pwdInput.focus(); // 聚焦输入框
-        }
-    });
+// 关闭所有模态框
+function closeAllModals() {
+  const modals = document.querySelectorAll('.modal');
+  modals.forEach(el => {
+    el.classList.remove('show');
+  });
+  closeImagePreview(); // 同时关闭图片预览
+  document.body.style.overflow = 'auto';
+}
 
-    // 6. 密码弹窗取消按钮事件
-    cancelPwd.addEventListener('click', function() {
-        hidePasswordModal();
-        pwdInput.value = ''; // 清空输入框
-    });
+// 打开图片预览
+function openImagePreview(imageSrc) {
+  const previewModal = document.getElementById('imagePreviewModal');
+  const previewImage = document.getElementById('previewImage');
+  
+  previewImage.src = imageSrc;
+  previewModal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
 
-    // 7. 点击密码弹窗外部区域关闭弹窗
-    pwdModal.addEventListener('click', function(e) {
-        if (e.target === pwdModal) {
-            hidePasswordModal();
-            pwdInput.value = '';
-        }
-    });
+// 关闭图片预览
+function closeImagePreview() {
+  const previewModal = document.getElementById('imagePreviewModal');
+  previewModal.classList.remove('show');
+  document.body.style.overflow = 'auto';
+}
 
-    // 8. 键盘事件：ESC关闭弹窗，Enter确认密码
-    document.addEventListener('keydown', function(e) {
-        // ESC键关闭弹窗
-        if (e.key === 'Escape' && pwdModal.classList.contains('show')) {
-            hidePasswordModal();
-            pwdInput.value = '';
-        }
-        // Enter键确认密码
-        if (e.key === 'Enter' && pwdModal.classList.contains('show') && document.activeElement === pwdInput) {
-            e.preventDefault(); // 阻止默认提交行为
-            confirmPwd.click();
-        }
-    });
+// 监听键盘ESC和触摸返回键
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeAllModals();
+    closePasswordModal();
+    closeImagePreview();
+  }
+});
 
-    // 9. 辅助函数：显示指定区域
-    function showSection(sectionId) {
-        // 隐藏所有区域
-        contentSections.forEach(section => {
-            section.style.display = 'none';
-        });
-        // 显示目标区域
-        const targetSection = document.getElementById(sectionId);
-        if (targetSection) {
-            targetSection.style.display = 'block';
-            // 滚动到区域顶部（平滑滚动）
-            targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-        // 重置侧边栏选中状态
-        navLinks.forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('data-target') === sectionId) {
-                link.classList.add('active');
-            }
-        });
+// 密码弹窗相关
+function openPasswordModal() {
+  const passwordModal = document.getElementById('passwordModal');
+  passwordModal.classList.add('show');
+  document.getElementById('passwordInput').value = '';
+  document.getElementById('errorMessage').classList.remove('show');
+  document.body.style.overflow = 'hidden';
+  // 移动端自动聚焦（兼容iOS）
+  setTimeout(() => {
+    const input = document.getElementById('passwordInput');
+    input.focus();
+    // iOS强制弹出键盘
+    if (typeof input.setSelectionRange === 'function') {
+      input.setSelectionRange(0, 0);
     }
+  }, 100);
+}
 
-    // 10. 辅助函数：显示密码弹窗
-    function showPasswordModal() {
-        pwdModal.classList.add('show');
-        pwdInput.focus(); // 自动聚焦输入框
+function closePasswordModal() {
+  const passwordModal = document.getElementById('passwordModal');
+  passwordModal.classList.remove('show');
+  document.body.style.overflow = 'auto';
+}
+
+function checkPassword() {
+  const passwordInput = document.getElementById('passwordInput');
+  const errorMessage = document.getElementById('errorMessage');
+  const inputPassword = passwordInput.value.trim();
+  
+  if (inputPassword === CORRECT_PASSWORD) {
+    closePasswordModal();
+    openModal('imageModal');
+  } else {
+    errorMessage.classList.add('show');
+    // 移动端震动反馈（如果支持）
+    if (navigator.vibrate) {
+      navigator.vibrate(100);
     }
+    passwordInput.select();
+    // 错误提示自动消失
+    setTimeout(() => {
+      errorMessage.classList.remove('show');
+    }, 3000);
+  }
+}
 
-    // 11. 辅助函数：隐藏密码弹窗
-    function hidePasswordModal() {
-        pwdModal.classList.remove('show');
-        pwdInput.value = ''; // 清空输入框
+// 密码输入框回车提交
+document.getElementById('passwordInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    checkPassword();
+  }
+});
+
+// 移动端触摸优化：点击遮罩关闭弹窗
+document.querySelectorAll('.password-modal, .modal, .image-preview-modal').forEach(el => {
+  el.addEventListener('click', e => {
+    if (e.target === el) {
+      if (el.id === 'passwordModal') {
+        closePasswordModal();
+      } else if (el.id === 'imagePreviewModal') {
+        closeImagePreview();
+      } else {
+        closeAllModals();
+      }
     }
+  });
+});
 
-    // 12. 响应式适配：侧边栏折叠/展开（可选增强）
-    // 移动端适配：点击导航链接后自动收起侧边栏（仅移动端生效）
-    if (window.innerWidth <= 768) {
-        navLinks.forEach(link => {
-            link.addEventListener('click', function() {
-                const sidebar = document.querySelector('.sidebar');
-                if (sidebar) { // 增加判空，避免找不到元素报错
-                    sidebar.style.height = 'auto';
-                }
-            });
-        });
-    }
-
-    // 14. 图片点击放大功能 新增逻辑
-    const imgPreviewModal = document.getElementById('imgPreviewModal');
-    const previewImg = document.getElementById('previewImg');
-    const allImages = document.querySelectorAll('.image-item img');
-
-    allImages.forEach(img => {
-        img.style.cursor = 'zoom-in'; // 鼠标悬浮显示放大图标
-        img.addEventListener('click', function(e) {
-            e.stopPropagation(); // 阻止事件冒泡
-            previewImg.src = this.src;
-            previewImg.alt = this.alt;
-            imgPreviewModal.classList.add('show');
-            // 禁止页面滚动
-            document.body.style.overflow = 'hidden';
-        });
-    });
-
-    // 点击弹窗关闭放大预览
-    imgPreviewModal.addEventListener('click', function() {
-        this.classList.remove('show');
-        // 恢复页面滚动
-        document.body.style.overflow = 'auto';
-    });
-
-    // 点击预览图本身不关闭（可选）
-    previewImg.addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
-
-    // ESC 键关闭预览
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && imgPreviewModal.classList.contains('show')) {
-            imgPreviewModal.classList.remove('show');
-            document.body.style.overflow = 'auto';
-        }
-    });
+// 防止移动端双击缩放
+document.addEventListener('dblclick', e => {
+  e.preventDefault();
 });
 </script>
+
 </body>
 </html>
