@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>图片展示</title>
+
+<!-- 🔥 关键预加载（只加载前6张，保证速度） -->
+<link rel="preload" as="image" href="img/0000.webp">
+<link rel="preload" as="image" href="img/0001.webp">
+<link rel="preload" as="image" href="img/0002.webp">
+<link rel="preload" as="image" href="img/0003.webp">
+<link rel="preload" as="image" href="img/0004.webp">
+<link rel="preload" as="image" href="img/0005.webp">
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+.modal-box::-webkit-scrollbar {
+  width: 4px;
+}
+.modal-box::-webkit-scrollbar-thumb {
+  background: #d4b98c55;
+}
+
+body {
+  background: #121212;
+  color: #f5e7d3;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+.back-btn {
+  position: fixed;
+  left: 16px;
+  top: 16px;
+  font-size: 16px;
+  background: rgba(26,26,26,0.95);
+  color: #d4b98c;
+  border: 1px solid #d4b98c;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 1001;
+  transition: all 0.3s;
+  touch-action: manipulation;
+}
+.back-btn:hover, .back-btn:active {
+  background: #333;
+  color: #f5e7d3;
+}
+.back-btn::before {
+  content: "←";
+  font-size: 18px;
+}
+
+.modal-box {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 80px 16px 40px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.image-content {
+  width: 100%;
+  height: 100%;
+  background: #121212;
+  padding: 20px 16px;
+}
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  max-width: 1200px;
+  margin: 0 auto;
+  justify-items: center;
+  align-items: center;
+}
+.image-item {
+  width: 100%;
+}
+.modal-thumbnail {
+  width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  cursor: zoom-in;
+  border: 1px solid #d4b98c33;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+}
+.modal-thumbnail:hover {
+  border-color: #d4b98c;
+  transform: scale(1.02);
+}
+
+.image-preview-modal {
+  display: none;
+  position: fixed;
+  z-index: 1002;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.95);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.image-preview-modal.show {
+  display: flex;
+}
+.preview-image {
+  max-width: 90%;
+  max-height: 90vh;
+  object-fit: contain;
+  border: 1px solid #d4b98c;
+  border-radius: 8px;
+}
+.close-preview {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(26,26,26,0.9);
+  color: #d4b98c;
+  border: 1px solid #d4b98c33;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 0.3s;
+}
+.close-preview:hover {
+  background: rgba(26,26,26,1);
+  border-color: #d4b98c;
+  color: #f5e7d3;
+}
+
+@media (max-width: 375px) {
+  .back-btn {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+  .image-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px;
+  }
+}
+@media (min-width: 768px) and (max-width: 1024px) {
+  .image-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+  }
+}
+
+.modal-thumbnail, .back-btn, .close-preview {
+  user-select: none;
+  -webkit-user-select: none;
+}
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="location.href='index.html'"></button>
+<div class="modal-box image-content">
+  <div class="image-grid">
+
+    <div class="image-item"><img src="img/0000.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0000.webp')"></div>
+    <div class="image-item"><img src="img/0001.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0001.webp')"></div>
+    <div class="image-item"><img src="img/0002.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0002.webp')"></div>
+    <div class="image-item"><img src="img/0003.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0003.webp')"></div>
+    <div class="image-item"><img src="img/0004.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0004.webp')"></div>
+    <div class="image-item"><img src="img/0005.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0005.webp')"></div>
+    <div class="image-item"><img src="img/0006.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0006.webp')"></div>
+    <div class="image-item"><img src="img/0007.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0007.webp')"></div>
+    <div class="image-item"><img src="img/0008.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0008.webp')"></div>
+    <div class="image-item"><img src="img/0009.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0009.webp')"></div>
+    <div class="image-item"><img src="img/0010.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0010.webp')"></div>
+    <div class="image-item"><img src="img/0011.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0011.webp')"></div>
+    <div class="image-item"><img src="img/0012.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0012.webp')"></div>
+    <div class="image-item"><img src="img/0013.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0013.webp')"></div>
+    <div class="image-item"><img src="img/0014.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0014.webp')"></div>
+    <div class="image-item"><img src="img/0015.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0015.webp')"></div>
+    <div class="image-item"><img src="img/0016.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0016.webp')"></div>
+    <div class="image-item"><img src="img/0017.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0017.webp')"></div>
+    <div class="image-item"><img src="img/0018.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0018.webp')"></div>
+    <div class="image-item"><img src="img/0019.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0019.webp')"></div>
+    <div class="image-item"><img src="img/0020.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0020.webp')"></div>
+    <div class="image-item"><img src="img/0021.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0021.webp')"></div>
+    <div class="image-item"><img src="img/0022.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0022.webp')"></div>
+    <div class="image-item"><img src="img/0023.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0023.webp')"></div>
+    <div class="image-item"><img src="img/0024.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0024.webp')"></div>
+    <div class="image-item"><img src="img/0025.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0025.webp')"></div>
+    <div class="image-item"><img src="img/0026.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0026.webp')"></div>
+    <div class="image-item"><img src="img/0027.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0027.webp')"></div>
+    <div class="image-item"><img src="img/0028.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0028.webp')"></div>
+    <div class="image-item"><img src="img/0029.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0029.webp')"></div>
+    <div class="image-item"><img src="img/0030.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0030.webp')"></div>
+    <div class="image-item"><img src="img/0031.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0031.webp')"></div>
+    <div class="image-item"><img src="img/0032.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0032.webp')"></div>
+    <div class="image-item"><img src="img/0033.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0033.webp')"></div>
+    <div class="image-item"><img src="img/0034.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0034.webp')"></div>
+    <div class="image-item"><img src="img/0035.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0035.webp')"></div>
+    <div class="image-item"><img src="img/0036.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0036.webp')"></div>
+    <div class="image-item"><img src="img/0037.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0037.webp')"></div>
+    <div class="image-item"><img src="img/0038.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0038.webp')"></div>
+    <div class="image-item"><img src="img/0039.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0039.webp')"></div>
+    <div class="image-item"><img src="img/0040.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0040.webp')"></div>
+    <div class="image-item"><img src="img/0041.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0041.webp')"></div>
+    <div class="image-item"><img src="img/0042.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0042.webp')"></div>
+    <div class="image-item"><img src="img/0043.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0043.webp')"></div>
+    <div class="image-item"><img src="img/0044.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0044.webp')"></div>
+    <div class="image-item"><img src="img/0045.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0045.webp')"></div>
+
+  </div>
+</div>
+
+<div class="image-preview-modal" id="imagePreviewModal">
+  <span class="close-preview" onclick="closeImagePreview()">×</span>
+  <img src="" alt="预览图片" class="preview-image" id="previewImage">
+</div>
+
+<script>
+function openImagePreview(imageSrc) {
+  const previewModal = document.getElementById('imagePreviewModal');
+  const previewImage = document.getElementById('previewImage');
+  previewImage.src = imageSrc;
+  previewModal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeImagePreview() {
+  const previewModal = document.getElementById('imagePreviewModal');
+  previewModal.classList.remove('show');
+  document.body.style.overflow = 'auto';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeImagePreview();
+});
+document.getElementById('imagePreviewModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('imagePreviewModal')) closeImagePreview();
+});
+</script>
+
+</body>
+</html>
