@@ -3,10 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>SAR</title>
-
+<title>SAR「Study And Relax」</title>
 <link rel="preload" as="image" href="img/logo.webp">
-
 <style>
 * {
   margin: 0;
@@ -16,7 +14,6 @@
   -webkit-tap-highlight-color: transparent;
 }
  
-/* 自定义滚动条样式 (黑色系) */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -46,8 +43,54 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+/* ========== 加载动画 start ========== */
+#loader-wrap {
+  position: fixed;
+  inset: 0;
+  background-color: #000000;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.6s ease, visibility 0.6s;
+}
+#loader-wrap.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.loader-inner {
+  position: relative;
+  width: 44px;
+  height: 44px;
+}
+.loader-logo {
+  width: 44px;
+  height: 44px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  object-fit: contain;
+  border-radius:4px;
+  /* 3秒完成3圈，结束保持状态 */
+  animation: logoSpin 3s linear forwards;
+}
+@keyframes logoSpin {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(1080deg);
+  }
+}
+#page-main {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+#page-main.show {
+  opacity:1;
+}
  
-/* 导航栏 */
 header {
   position: fixed;
   top: 0;
@@ -105,7 +148,6 @@ nav a:hover {
   color: #f5e7d3;
 }
  
-/* 主内容 */
 main {
   margin-top: 60px;
   padding: 0;
@@ -116,12 +158,11 @@ main {
   margin: 0 auto;
 }
  
-/* 品牌介绍文字区 */
 .intro-section {
   max-width: 1000px;
   margin: 20px auto;
   padding: 20px 16px;
-  background: #1a1a1a;
+  background: #000000;
   border-radius: 20px;
   border: 1px solid #d4b98c33;
   width: 92%;
@@ -145,7 +186,6 @@ main {
   margin-bottom: 0;
 }
  
-/* 卡片网格区 */
 .grid {
   max-width: 1000px;
   display: grid;
@@ -156,7 +196,6 @@ main {
   width: 92%;
 }
  
-/* 卡片 */
 .card {
   background: #1a1a1a;
   border-radius: 20px;
@@ -190,99 +229,6 @@ main {
   font-size: clamp(0.875rem, 3vw, 1rem);
 }
  
-/* 密码弹窗样式 */
-.password-modal {
-  display: none;
-  position: fixed;
-  z-index: 1001;
-  left: 0;
-  top: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0,0,0,0.85);
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-.password-modal.show {
-  display: flex;
-}
-.password-box {
-  background: #1a1a1a;
-  border-radius: 16px;
-  padding: 30px 20px;
-  width: 100%;
-  max-width: 400px;
-  box-shadow: 0 10px 30px rgba(212, 185, 140, 0.2);
-  text-align: center;
-  border: 1px solid #d4b98c;
-}
-.password-box h3 {
-  font-size: clamp(1.25rem, 4vw, 1.375rem);
-  margin-bottom: 20px;
-  color: #f5e7d3;
-}
-.password-input {
-  width: 100%;
-  padding: 14px 16px;
-  font-size: 18px;
-  border: 1px solid #a89470;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  outline: none;
-  text-align: center;
-  background: #222;
-  color: #f5e7d3;
-  -webkit-appearance: none;
-  appearance: none;
-}
-.password-input:focus {
-  border-color: #d4b98c;
-  box-shadow: 0 0 0 2px rgba(212, 185, 140, 0.2);
-}
-.password-buttons {
-  display: flex;
-  gap: 12px;
-}
-.password-btn {
-  flex: 1;
-  padding: 14px 12px;
-  border-radius: 8px;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background 0.3s;
-  -webkit-appearance: none;
-  appearance: none;
-}
-.confirm-btn {
-  background: #d4b98c;
-  color: #121212;
-  font-weight: 600;
-}
-.confirm-btn:hover, .confirm-btn:active {
-  background: #f5e7d3;
-}
-.cancel-btn {
-  background: #222;
-  color: #d4b98c;
-  border: 1px solid #d4b98c33;
-}
-.cancel-btn:hover, .cancel-btn:active {
-  background: #333;
-  border-color: #d4b98c;
-}
-.error-message {
-  color: #ff8a65;
-  font-size: 14px;
-  margin-top: 10px;
-  display: none;
-}
-.error-message.show {
-  display: block;
-}
- 
-/* 全屏模态框基础样式 */
 .modal {
   display: none;
   position: fixed;
@@ -299,7 +245,6 @@ main {
   display: block;
 }
  
-/* 模态框内容容器 - 全屏滚动 */
 .modal-box {
   position: relative;
   width: 100%;
@@ -310,7 +255,6 @@ main {
   -webkit-overflow-scrolling: touch;
 }
  
-/* 返回按钮 - 固定在左上角 */
 .back-btn {
   position: fixed;
   left: 16px;
@@ -338,7 +282,6 @@ main {
   font-size: 18px;
 }
  
-/* 文章内容样式 */
 .article-content {
   max-width: 800px;
   margin: 0 auto;
@@ -387,8 +330,6 @@ main {
 .article-content .content strong {
   color: #f5e7d3;
 }
-
-/* 小屏手机适配 */
 @media (max-width: 375px) {
   .intro-section, .grid {
     width: 95%;
@@ -399,9 +340,6 @@ main {
   .back-btn {
     padding: 6px 10px;
     font-size: 14px;
-  }
-  .password-box {
-    padding: 20px 15px;
   }
   .nav-logo {
     width: 28px;
@@ -414,8 +352,6 @@ main {
     line-height: 2;
   }
 }
-
-/* 平板横屏优化 */
 @media (min-width: 768px) and (max-width: 1024px) {
   .intro-section {
     margin: 30px auto;
@@ -426,21 +362,26 @@ main {
     margin: 30px auto;
   }
 }
-
-/* 禁用文字选择 */
-.card, .back-btn, .password-btn, .nav-logo {
+.card, .back-btn, .nav-logo {
   user-select: none;
   -webkit-user-select: none;
 }
 </style>
 </head>
 <body>
-
+<!-- ========== 加载动画层 ========== -->
+<div id="loader-wrap">
+  <div class="loader-inner">
+    <img class="loader-logo" src="img/logo.webp" alt="loading">
+  </div>
+</div>
+<div id="page-main">
 <header>
   <nav>
     <div class="nav-left">
-      <!-- 🔥 已换成 WebP 格式 -->
-      <img src="img/logo.webp" alt="Logo" class="nav-logo">
+      <a href="iNteresting.html">
+        <img src="img/logo.webp" alt="Logo" class="nav-logo">
+      </a>
     </div>
     <ul>
       <li><a onclick="openModal('personModal')">人物介绍</a></li>
@@ -448,14 +389,13 @@ main {
     </ul>
   </nav>
 </header>
-
 <main>
   <div class="container">
     <div class="intro-section">
       <h2>SAR「Study And Relax」</h2>
-      <p>	1.更新《家的360°》，扎根于长篇的短篇，算是长篇小说的半个预告</p>
-      <p>	2.黄总的可乐博弈为我们留下维纳斯的美</p>
-      <p>	3.图片的更新...下次一定！</p>
+      <p>	1.更新十五章图片</p>
+      <p>	2.制作了6个彩蛋，第一个截图集齐的人，我会根据你是谁送你一份厚礼！</p>
+      <p>	3.听取一位OIer建议，对输入密码环节进行了更安全的加密措施（防君子不防小人）</p>
       <p>            首次发布时间：2025年12月14日</p>
       <img 
         src="img/logo.webp" 
@@ -465,16 +405,13 @@ main {
         onclick=""
       >
     </div>
-
     <div class="grid">
-      <!-- 好图：密码验证后跳转到独立图片页 pic.html -->
-      <div class="card" onclick="openPasswordModal()">
+      <div class="card" onclick="location.href='pic.html'">
         <div class="inner">
           <h2>好图</h2>
           <p>快进来</p>
         </div>
       </div>
-      <!-- 文章全部跳转至对应独立页面 -->
       <div class="card" onclick="location.href='novel1.html'">
         <div class="inner">
           <h2>诗集</h2>
@@ -490,21 +427,6 @@ main {
     </div>
   </div>
 </main>
-
-<!-- 密码弹窗 -->
-<div class="password-modal" id="passwordModal">
-  <div class="password-box">
-    <h3>请输入文本</h3>
-    <input type="password" class="password-input" id="passwordInput" placeholder="输入">
-    <div class="password-buttons">
-      <button class="password-btn cancel-btn" onclick="closePasswordModal()">我是乐子</button>
-      <button class="password-btn confirm-btn" onclick="checkPassword()">入</button>
-    </div>
-    <div class="error-message" id="errorMessage">初中同学找我要，其他人一边去</div>
-  </div>
-</div>
-
-<!-- 人物介绍 弹窗（保留在主页） -->
 <div class="modal" id="personModal">
   <button class="back-btn" onclick="closeAllModals()">返回</button>
   <div class="modal-box article-content">
@@ -649,22 +571,21 @@ XZR：
     </div>
   </div>
 </div>
-
-<!-- 更新日志 弹窗（保留在主页） -->
 <div class="modal" id="logModal">
   <button class="back-btn" onclick="closeAllModals()">返回</button>
   <div class="modal-box article-content">
     <h1>更新日志</h1>
-    <div class="date">2026 年 08 月 05 日</div>
+    <div class="date">2026 年 08 月 20 日</div>
     <div class="content">
-2026.08.15 更新《家的360°》，预告长篇小说
+2026.08.20 更新十五章图片，制作了6个小彩蛋
+	
+2026.08.15 更新《家的360°》，预告长篇小说，《可乐博弈》成为文学界的维纳斯
 	
 2026.08.05 黄总奉献诗作，简化首页，优化图片加载
 	
 2026.05.17《红楼梦》续作第八十一回，下架两篇文章
 	
 2026.04.26《可乐博弈》第一章完结，看来黄总的文章只完成了很小一部分。我们的介绍更新完毕
-
 2026.02.24《可乐博弈》 更新，网站页面优化
  
 2026.02.13 更新排版和主题色，并且有了我们的logo！感谢设计师黄总 
@@ -681,11 +602,17 @@ XZR：
     </div>
   </div>
 </div>
-
+</div>
 <script>
-const CORRECT_PASSWORD = '110101100';
-
-// 打开模态框
+// 加载动画，固定3秒
+const loader = document.getElementById('loader-wrap');
+const pageMain = document.getElementById('page-main');
+window.addEventListener('load', ()=>{
+  setTimeout(()=>{
+    loader.classList.add('hidden');
+    pageMain.classList.add('show');
+  },3000);
+})
 function openModal(id) {
   closeAllModals();
   const modal = document.getElementById(id);
@@ -693,8 +620,6 @@ function openModal(id) {
   document.body.style.overflow = 'hidden';
   modal.querySelector('.modal-box').scrollTop = 0;
 }
-
-// 关闭所有弹窗。找到密码了？无聊...
 function closeAllModals() {
   const modals = document.querySelectorAll('.modal');
   modals.forEach(el => {
@@ -702,83 +627,21 @@ function closeAllModals() {
   });
   document.body.style.overflow = 'auto';
 }
-
-// 密码弹窗
-function openPasswordModal() {
-  const passwordModal = document.getElementById('passwordModal');
-  passwordModal.classList.add('show');
-  document.getElementById('passwordInput').value = '';
-  document.getElementById('errorMessage').classList.remove('show');
-  document.body.style.overflow = 'hidden';
-  setTimeout(() => {
-    const input = document.getElementById('passwordInput');
-    input.focus();
-    if (typeof input.setSelectionRange === 'function') {
-      input.setSelectionRange(0, 0);
-    }
-  }, 100);
-}
-
-function closePasswordModal() {
-  const passwordModal = document.getElementById('passwordModal');
-  passwordModal.classList.remove('show');
-  document.body.style.overflow = 'auto';
-}
-
-function checkPassword() {
-  const passwordInput = document.getElementById('passwordInput');
-  const errorMessage = document.getElementById('errorMessage');
-  const inputPassword = passwordInput.value.trim();
-
-  if (inputPassword === CORRECT_PASSWORD) {
-    closePasswordModal();
-    // 密码正确跳转到独立图片页
-    window.location.href = "pic.html";
-  } else {
-    errorMessage.classList.add('show');
-    if (navigator.vibrate) {
-      navigator.vibrate(100);
-    }
-    passwordInput.select();
-    setTimeout(() => {
-      errorMessage.classList.remove('show');
-    }, 3000);
-  }
-}
-
-// 密码框回车提交
-document.getElementById('passwordInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    checkPassword();
-  }
-});
-
-// ESC 关闭
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     closeAllModals();
-    closePasswordModal();
   }
 });
-
-// 点击遮罩关闭弹窗
-document.querySelectorAll('.password-modal, .modal').forEach(el => {
+document.querySelectorAll('.modal').forEach(el => {
   el.addEventListener('click', e => {
     if (e.target === el) {
-      if (el.id === 'passwordModal') {
-        closePasswordModal();
-      } else {
-        closeAllModals();
-      }
+      closeAllModals();
     }
   });
 });
-
-// 禁止双击缩放
 document.addEventListener('dblclick', e => {
   e.preventDefault();
 });
 </script>
-
 </body>
 </html>

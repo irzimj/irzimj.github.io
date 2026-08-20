@@ -12,7 +12,6 @@
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
-
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -34,7 +33,6 @@
 .modal-box::-webkit-scrollbar-thumb {
   background: #d4b98c55;
 }
-
 body {
   background: #121212;
   color: #f5e7d3;
@@ -43,7 +41,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
-
 .back-btn {
   position: fixed;
   left: 16px;
@@ -70,7 +67,6 @@ body {
   content: "←";
   font-size: 18px;
 }
-
 .modal-box {
   position: relative;
   width: 100%;
@@ -80,7 +76,6 @@ body {
   padding: 80px 16px 40px;
   -webkit-overflow-scrolling: touch;
 }
-
 .article-content {
   max-width: 800px;
   margin: 0 auto;
@@ -129,7 +124,6 @@ body {
 .article-content .content strong {
   color: #f5e7d3;
 }
-
 @media (max-width: 375px) {
   .back-btn {
     padding: 6px 10px;
@@ -142,33 +136,79 @@ body {
     line-height: 2;
   }
 }
-
 .back-btn {
   user-select: none;
   -webkit-user-select: none;
 }
+.author-tip {
+  cursor: pointer;
+  color: #f5e7d3;
+  text-decoration: underline dotted #d4b98c;
+}
+.author-popup {
+  position: fixed;
+  inset: 0;
+  background-color: #000000;
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.author-popup.show {
+  display: flex;
+}
+.author-popup-text {
+  font-size: clamp(1.1rem,4vw,1.5rem);
+  color: #d4b98c;
+  text-align: center;
+  line-height: 2;
+}
 </style>
 </head>
 <body>
-
 <button class="back-btn" onclick="location.href='index.html'"></button>
+
+<div class="author-popup" id="authorPopup">
+  <div class="author-popup-text">
+耀宇作，本名黄天一，中国共产党优秀的接班人，去介绍页面了解一下吧！
+  </div>
+</div>
+
 <div class="modal-box article-content">
   <h1>诗集</h1>
   <div class="date">2026 年 08 月 05 日</div>
   <div class="content">
-	《黄昏吟》 耀宇作
+	《黄昏吟》 <span class="author-tip" onclick="showAuthorTip()">耀宇作</span>
 君随暮色至，晓别破曦微。
 惯见浑闲事，愿君知此机：
 蓝瞳堪醉月，共处若霞飞。
 然戏如童稚，时亲时远违。
-
-	《风刃魄》 耀宇作
+	《风刃魄》 <span class="author-tip" onclick="showAuthorTip()">耀宇作</span>
 飒逐横川踏霰来，坼影冲岚绝尘霜。
 残旗卷雪星欲碎，孤刃裁朔过远山。
 独光凝寒现英漠，铁甲犹存流云处。
 狂沙蚀骨魄仍在，叱咤寰宇万壑风。
   </div>
 </div>
+
+<script>
+const popup = document.getElementById('authorPopup');
+let timer = null;
+
+function showAuthorTip(){
+  popup.classList.add('show');
+  clearTimeout(timer);
+  timer = setTimeout(()=>{
+    closeAuthorTip();
+  },5000);
+}
+function closeAuthorTip(){
+  clearTimeout(timer);
+  popup.classList.remove('show');
+}
+popup.addEventListener('click', closeAuthorTip);
+</script>
 
 </body>
 </html>

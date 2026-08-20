@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Tree-Hole</title>
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+body{
+  background-color:#000000;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#d4b98c;
+  font-family:-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+  text-align:center;
+}
+.text-wrap{
+  font-size:clamp(1.4rem,6vw,2.2rem);
+  line-height:2.2;
+}
+.back-btn{
+  position:fixed;
+  top:16px;
+  left:16px;
+  background:rgba(26,26,26,0.95);
+  color:#d4b98c;
+  border:1px solid #d4b98c;
+  padding:8px 12px;
+  border-radius:8px;
+  font-size:16px;
+  cursor:pointer;
+  transition:all 0.3s;
+  z-index:10;
+}
+.back-btn:hover{
+  background:#333;
+  color:#f5e7d3;
+}
+</style>
+</head>
+<body>
+<button class="back-btn" onclick="history.back()">钻出树洞</button>
+<div class="text-wrap">
+小彩蛋！！！<br>
+如果可能（开通动态服务），以后这里会是留言的树洞！
+</div>
+</body>
+</html>

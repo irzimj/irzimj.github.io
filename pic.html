@@ -4,15 +4,13 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <title>图片展示</title>
-
-<!-- 🔥 关键预加载（只加载前6张，保证速度） -->
 <link rel="preload" as="image" href="img/0000.webp">
 <link rel="preload" as="image" href="img/0001.webp">
 <link rel="preload" as="image" href="img/0002.webp">
 <link rel="preload" as="image" href="img/0003.webp">
 <link rel="preload" as="image" href="img/0004.webp">
 <link rel="preload" as="image" href="img/0005.webp">
-
+<link rel="preload" as="image" href="img/haha.webp">
 <style>
 * {
   margin: 0;
@@ -21,7 +19,6 @@
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
-
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -43,7 +40,6 @@
 .modal-box::-webkit-scrollbar-thumb {
   background: #d4b98c55;
 }
-
 body {
   background: #121212;
   color: #f5e7d3;
@@ -52,7 +48,93 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
-
+.password-modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.92);
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+.password-box{
+  background:#1a1a1a;
+  border-radius:16px;
+  padding:32px 24px;
+  width:100%;
+  max-width:400px;
+  border:1px solid #d4b98c;
+  text-align:center;
+  box-shadow:0 10px 40px rgba(212,185,140,0.2);
+}
+.password-box h3{
+  font-size:1.375rem;
+  margin-bottom:20px;
+  color:#f5e7d3;
+}
+.password-input{
+  width:100%;
+  padding:14px 16px;
+  font-size:18px;
+  background:#222;
+  color:#f5e7d3;
+  border:1px solid #a89470;
+  border-radius:8px;
+  text-align:center;
+  margin-bottom:20px;
+  outline:none;
+}
+.password-input:focus{
+  border-color:#d4b98c;
+  box-shadow:0 0 0 2px rgba(212,185,140,0.2);
+}
+.btns{
+  display:flex;
+  gap:12px;
+}
+.btn{
+  flex:1;
+  padding:14px;
+  border-radius:8px;
+  border:none;
+  font-size:16px;
+  cursor:pointer;
+}
+.btn-ok{
+  background:#d4b98c;
+  color:#121212;
+  font-weight:600;
+}
+.btn-cancel{
+  background:#222;
+  color:#d4b98c;
+  border:1px solid #d4b98c33;
+}
+.error{
+  color:#ff8a65;
+  font-size:14px;
+  margin-top:12px;
+  display:none;
+}
+.error.show{
+  display:block;
+}
+.error-image {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: none;
+  background: #000;
+}
+.error-image img {
+  width: 100vw;
+  height: 100vh;
+  object-fit: fill;
+}
+.wrap-content{
+  display:none;
+}
 .back-btn {
   position: fixed;
   left: 16px;
@@ -79,7 +161,6 @@ body {
   content: "←";
   font-size: 18px;
 }
-
 .modal-box {
   position: relative;
   width: 100%;
@@ -89,7 +170,6 @@ body {
   padding: 80px 16px 40px;
   -webkit-overflow-scrolling: touch;
 }
-
 .image-content {
   width: 100%;
   height: 100%;
@@ -122,7 +202,6 @@ body {
   border-color: #d4b98c;
   transform: scale(1.02);
 }
-
 .image-preview-modal {
   display: none;
   position: fixed;
@@ -168,7 +247,21 @@ body {
   border-color: #d4b98c;
   color: #f5e7d3;
 }
-
+/* Forever 全屏文字 */
+.forever-text{
+  position:fixed;
+  inset:0;
+  z-index:1003;
+  background:#000;
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.forever-text span{
+  color:#d4b98c;
+  font-size:20vw;
+  font-weight:bold;
+}
 @media (max-width: 375px) {
   .back-btn {
     padding: 6px 10px;
@@ -178,6 +271,9 @@ body {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 8px;
   }
+  .password-box{
+    padding:20px 15px;
+  }
 }
 @media (min-width: 768px) and (max-width: 1024px) {
   .image-grid {
@@ -185,7 +281,6 @@ body {
     gap: 16px;
   }
 }
-
 .modal-thumbnail, .back-btn, .close-preview {
   user-select: none;
   -webkit-user-select: none;
@@ -193,11 +288,24 @@ body {
 </style>
 </head>
 <body>
-
+<div class="password-modal" id="pwModal">
+  <div class="password-box">
+    <h3>输入密码</h3>
+    <input class="password-input" id="pwInput" placeholder="提示：点击下方退出">
+    <div class="btns">
+      <button class="btn btn-cancel" id="btnCancel">退出</button>
+      <button class="btn btn-ok" id="btnOk">GO</button>
+    </div>
+    <div class="error" id="errMsg">密码错误，宝宝。稍后请耐心等几十秒...看看魑魅魍魉...</div>
+  </div>
+</div>
+<div class="error-image" id="errorImage">
+  <img src="img/haha.webp" alt="">
+</div>
+<div class="wrap-content" id="pageContent">
 <button class="back-btn" onclick="location.href='index.html'"></button>
 <div class="modal-box image-content">
   <div class="image-grid">
-
     <div class="image-item"><img src="img/0000.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0000.webp')"></div>
     <div class="image-item"><img src="img/0001.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0001.webp')"></div>
     <div class="image-item"><img src="img/0002.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0002.webp')"></div>
@@ -244,36 +352,126 @@ body {
     <div class="image-item"><img src="img/0043.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0043.webp')"></div>
     <div class="image-item"><img src="img/0044.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0044.webp')"></div>
     <div class="image-item"><img src="img/0045.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0045.webp')"></div>
-
+    <div class="image-item"><img src="img/0046.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0046.webp')"></div>
+    <div class="image-item"><img src="img/0047.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0047.webp')"></div>
+    <div class="image-item"><img src="img/0048.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0048.webp')"></div>
+    <div class="image-item"><img src="img/0049.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0049.webp')"></div>
+    <div class="image-item"><img src="img/0050.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0050.webp')"></div>
+    <div class="image-item"><img src="img/0051.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0051.webp')"></div>
+    <div class="image-item"><img src="img/0052.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0052.webp')"></div>
+    <div class="image-item"><img src="img/0053.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0053.webp')"></div>
+    <div class="image-item"><img src="img/0054.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0054.webp')"></div>
+    <div class="image-item"><img src="img/0055.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0055.webp')"></div>
+    <div class="image-item"><img src="img/0056.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0056.webp')"></div>
+    <div class="image-item"><img src="img/0057.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0057.webp')"></div>
+    <div class="image-item"><img src="img/0058.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0058.webp')"></div>
+    <div class="image-item"><img src="img/0059.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0059.webp')"></div>
+    <div class="image-item"><img src="img/0060.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0060.webp')"></div>
   </div>
 </div>
-
 <div class="image-preview-modal" id="imagePreviewModal">
   <span class="close-preview" onclick="closeImagePreview()">×</span>
   <img src="" alt="预览图片" class="preview-image" id="previewImage">
 </div>
-
+<!-- Forever全屏文字层 -->
+<div class="forever-text" id="foreverText">
+  <span>Forever！</span>
+</div>
+</div>
 <script>
+const CORRECT_SHA256 = "0823cf92b5f39aa38361895ba727bde0b60d579c4c940afdd1d147ee5e2319c3";
+const HOME_URL = "index.html";
+async function sha256(str){
+  const enc = new TextEncoder();
+  const buf = await crypto.subtle.digest("SHA-256", enc.encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+const pwModal = document.getElementById("pwModal");
+const pwInput = document.getElementById("pwInput");
+const btnOk = document.getElementById("btnOk");
+const btnCancel = document.getElementById("btnCancel");
+const errMsg = document.getElementById("errMsg");
+const pageContent = document.getElementById("pageContent");
+const errorImage = document.getElementById("errorImage");
+const foreverText = document.getElementById("foreverText");
+
+btnCancel.onclick = ()=>{
+  location.href = HOME_URL;
+};
+async function doCheck(){
+  const val = pwInput.value.trim();
+  const hash = await sha256(val);
+  if(hash === CORRECT_SHA256){
+    pwModal.style.display = "none";
+    pageContent.style.display = "block";
+  }else{
+    errMsg.classList.add("show");
+    if(navigator.vibrate) navigator.vibrate(150);
+    setTimeout(()=>{
+      errorImage.style.display = "flex";
+    },1200);
+    setTimeout(()=>{
+      location.href = HOME_URL;
+    },45200);
+  }
+}
+btnOk.onclick = doCheck;
+pwInput.addEventListener("keydown",e=>{
+  if(e.key==="Enter") doCheck();
+});
+window.addEventListener("load",()=>{
+  pwInput.focus();
+});
+
+let isLockForever = false;
+
 function openImagePreview(imageSrc) {
   const previewModal = document.getElementById('imagePreviewModal');
   const previewImage = document.getElementById('previewImage');
   previewImage.src = imageSrc;
   previewModal.classList.add('show');
   document.body.style.overflow = 'hidden';
+
+  // 判断是否是0001.webp
+  if(imageSrc === "img/0001.webp"){
+    isLockForever = true;
+    // 6秒倒计时
+    setTimeout(()=>{
+      closeImagePreview();
+      foreverText.style.display = "flex";
+      // 展示Forever文字5秒后自动消失，可自行修改时间
+      setTimeout(()=>{
+        foreverText.style.display = "none";
+      },5000);
+      isLockForever = false;
+    },6000);
+  }else{
+    isLockForever = false;
+  }
 }
+
 function closeImagePreview() {
+  if(isLockForever) return; //锁定状态禁止关闭
   const previewModal = document.getElementById('imagePreviewModal');
   previewModal.classList.remove('show');
   document.body.style.overflow = 'auto';
 }
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeImagePreview();
+  if (e.key === 'Escape') {
+    if(!isLockForever){
+      closeImagePreview();
+    }
+  }
 });
+
 document.getElementById('imagePreviewModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('imagePreviewModal')) closeImagePreview();
+  if (e.target === document.getElementById('imagePreviewModal')) {
+    if(!isLockForever){
+      closeImagePreview();
+    }
+  }
 });
 </script>
-
 </body>
 </html>
