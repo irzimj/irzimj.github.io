@@ -43,7 +43,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-/* ========== 加载动画 start ========== */
+
 #loader-wrap {
   position: fixed;
   inset: 0;
@@ -53,6 +53,7 @@ body {
   align-items: center;
   justify-content: center;
   transition: opacity 0.6s ease, visibility 0.6s;
+  overflow: hidden;
 }
 #loader-wrap.hidden {
   opacity: 0;
@@ -72,8 +73,8 @@ body {
   top: 50%;
   object-fit: contain;
   border-radius:4px;
-  /* 3秒完成3圈，结束保持状态 */
-  animation: logoSpin 3s linear forwards;
+  
+  animation: logoSpin 1.7s linear forwards;
 }
 @keyframes logoSpin {
   0% {
@@ -366,10 +367,19 @@ main {
   user-select: none;
   -webkit-user-select: none;
 }
+a {
+  color:#d4b98c;
+  text-decoration: none; 
+}
+
+a:hover {
+  color:#f5e7d3;
+}
+
 </style>
 </head>
 <body>
-<!-- ========== 加载动画层 ========== -->
+
 <div id="loader-wrap">
   <div class="loader-inner">
     <img class="loader-logo" src="img/logo.webp" alt="loading">
@@ -393,10 +403,10 @@ main {
   <div class="container">
     <div class="intro-section">
       <h2>SAR「Study And Relax」</h2>
-      <p>	1.修正笔名错误</p>
-      <p>	2.修正彩蛋词条</p>
-      <p>	3.修正图片差错</p>
-      <p>            首次发布时间：2025年12月14日</p>
+      <p>	1.启用树洞留言服务</p>
+      <p>	2.更新图片</p>
+      <p>	3.修复bug</p>
+      <p>首次发布时间：2025年12月14日  官方邮箱：irzimj@outlook.com</p>
       <img 
         src="img/logo.webp" 
         loading="lazy"
@@ -508,7 +518,7 @@ LLT：
 追不追星：没有
 有没有给异性置顶：没有
 喜欢听音乐吗：可以
-最喜欢什么歌：JET SET!♿
+最喜欢什么歌：JET SET!
 最喜欢的三个游戏：hollow knight、slay the tower、steam
 喜欢果茶or奶茶：果茶
 喜欢牛奶还是饮料：饮料
@@ -546,17 +556,17 @@ MJY：
 21.最讨厌做什么：剪头 
  
 XZR：
-1.生日：01.22
+1.生日：<a href="https://cn.bing.com/search?q=%E6%A8%8A%E6%8C%AF%E4%B8%9C%E5%87%BA%E7%94%9F%E6%97%A5%E6%9C%9F&qs=n&form=QBRE&sp=-1&lq=0&pq=%E6%A8%8A%E6%8C%AF%E4%B8%9C%E5%87%BA%E7%94%9F%E6%97%A5%E6%9C%9F&sc=1-7&sk=&cvid=3030AB9AE2E74A99B3B8BDAFC71826C5" target="_blank" rel="noopener noreferrer">01.22</a>
 2.最喜欢的学科：没有
-3.自己的最爱昵称:irzimj
+3.自己的最爱昵称:<a href="https://baike.baidu.com/item/%E6%AD%A6%E9%92%A2%E5%AE%9E%E9%AA%8C%E5%AD%A6%E6%A0%A1/1976138" target="_blank" rel="noopener noreferrer">irzimj</a>
 4.喜欢甜or辣：甜的
-5.喜欢甜or辣：甜的
-6.喜欢什么花：樱花
-7.追不追星：不
+5.喜欢甜or辣：<a href="https://baike.baidu.com/item/%E5%8F%AF%E7%88%B1/282" target="_blank" rel="noopener noreferrer">甜的</a>
+6.喜欢什么花：<a href="https://baike.baidu.com/item/%E6%A8%B1%E8%8A%B1/70387" target="_blank" rel="noopener noreferrer">樱花</a>
+7.追不追星：追但不追，有点复杂
 8.有没有给异性置过顶：有
 9.喜欢听音乐吗：嗯
 10.喜欢什么歌：好多
-11.最喜欢的游戏：SEKIRO；Shadows Die Twice
+11.最喜欢的游戏：<a href="https://sekiro.cubejoy.com/index.html" target="_blank" rel="noopener noreferrer">SEKIRO：SHADOWS DIE TWICE</a>
 12.喜欢果茶or奶茶：奶茶
 13.喜欢牛奶还是饮料：牛奶
 14.今年过生日最好的礼物是谁送的：朋友
@@ -568,6 +578,8 @@ XZR：
 20.想回到什么时候：2025年
 21.最讨厌什么：伤害我
 22.喜欢读的书：无法一一列举
+
+官方邮箱：irzimj@outlook.com
     </div>
   </div>
 </div>
@@ -575,9 +587,13 @@ XZR：
   <button class="back-btn" onclick="closeAllModals()">返回</button>
   <div class="modal-box article-content">
     <h1>更新日志</h1>
-    <div class="date">2026 年 08 月 21 日</div>
+    <div class="date">2026 年 08 月 23 日</div>
     <div class="content">
-2026.08.21 修正
+	以后也许会有老版本回归（
+	
+2026.08.23 树洞，图片
+	
+2026.08.21 修正错误
 	
 2026.08.20 更新十五张图片，制作了6个小彩蛋，巩固加密（防君子不防小人）
 	
@@ -588,6 +604,7 @@ XZR：
 2026.05.17《红楼梦》续作第八十一回，下架两篇文章
 	
 2026.04.26《可乐博弈》第一章完结，看来黄总的文章只完成了很小一部分。我们的介绍更新完毕
+
 2026.02.24《可乐博弈》 更新，网站页面优化
  
 2026.02.13 更新排版和主题色，并且有了我们的logo！感谢设计师黄总 
@@ -606,15 +623,75 @@ XZR：
 </div>
 </div>
 <script>
-// 加载动画，固定3秒
 const loader = document.getElementById('loader-wrap');
 const pageMain = document.getElementById('page-main');
+const preloadImages = [
+  "img/logo.webp",
+  "img/0011.webp",
+  "img/0012.webp",
+  "img/0013.webp",
+  "img/0014.webp",
+  "img/0015.webp",
+  "img/0016.webp",
+  "img/0017.webp",
+  "img/0018.webp",
+  "img/0019.webp",
+  "img/0020.webp",
+  "img/0021.webp",
+  "img/0022.webp",
+  "img/0023.webp",
+  "img/haha.webp",
+];
+
+function preload(list) {
+  list.forEach(src=>{
+    const img = new Image();
+    img.src = src;
+  })
+}
+
 window.addEventListener('load', ()=>{
+  document.body.style.overflow = "hidden";
+
+  preload(preloadImages);
+
   setTimeout(()=>{
     loader.classList.add('hidden');
     pageMain.classList.add('show');
-  },3000);
+    document.body.style.overflow = "auto";
+  },2000);
 })
+
+function openModal(id) {
+  closeAllModals();
+  const modal = document.getElementById(id);
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+  modal.querySelector('.modal-box').scrollTop = 0;
+}
+function closeAllModals() {
+  const modals = document.querySelectorAll('.modal');
+  modals.forEach(el => {
+    el.classList.remove('show');
+  });
+  document.body.style.overflow = 'auto';
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeAllModals();
+  }
+});
+document.querySelectorAll('.modal').forEach(el => {
+  el.addEventListener('click', e => {
+    if (e.target === el) {
+      closeAllModals();
+    }
+  });
+});
+document.addEventListener('dblclick', e => {
+  e.preventDefault();
+});
+
 function openModal(id) {
   closeAllModals();
   const modal = document.getElementById(id);

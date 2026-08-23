@@ -11,6 +11,11 @@
 <link rel="preload" as="image" href="img/0004.webp">
 <link rel="preload" as="image" href="img/0005.webp">
 <link rel="preload" as="image" href="img/haha.webp">
+<link rel="preload" as="image" href="img/0006.webp">
+<link rel="preload" as="image" href="img/0007.webp">
+<link rel="preload" as="image" href="img/0008.webp">
+<link rel="preload" as="image" href="img/0009.webp">
+<link rel="preload" as="image" href="img/0010.webp">
 <style>
 * {
   margin: 0;
@@ -211,20 +216,26 @@ body {
   width: 100vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.95);
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+  overflow: hidden;
 }
 .image-preview-modal.show {
-  display: flex;
+  display: block;
+}
+.preview-wrap{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 .preview-image {
-  max-width: 90%;
-  max-height: 90vh;
-  object-fit: contain;
   border: 1px solid #d4b98c;
   border-radius: 8px;
+  transform-origin: center center;
+  cursor: grab;
+  user-select: none;
 }
+
 .close-preview {
   position: fixed;
   top: 20px;
@@ -241,6 +252,7 @@ body {
   cursor: pointer;
   font-size: 20px;
   transition: all 0.3s;
+  z-index:10;
 }
 .close-preview:hover {
   background: rgba(26,26,26,1);
@@ -291,7 +303,7 @@ body {
 <div class="password-modal" id="pwModal">
   <div class="password-box">
     <h3>输入密码</h3>
-    <input class="password-input" id="pwInput" placeholder="提示：点击下方退出">
+    <input type="password" class="password-input" id="pwInput" placeholder="提示：点击下方退出">
     <div class="btns">
       <button class="btn btn-cancel" id="btnCancel">退出</button>
       <button class="btn btn-ok" id="btnOk">GO</button>
@@ -367,25 +379,68 @@ body {
     <div class="image-item"><img src="img/0058.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0058.webp')"></div>
     <div class="image-item"><img src="img/0059.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0059.webp')"></div>
     <div class="image-item"><img src="img/0060.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0060.webp')"></div>
+    <div class="image-item"><img src="img/0061.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0061.webp')"></div>
+	<div class="image-item"><img src="img/0062.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0062.webp')"></div>
+	<div class="image-item"><img src="img/0063.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0063.webp')"></div>
+	<div class="image-item"><img src="img/0064.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0064.webp')"></div>
+	<div class="image-item"><img src="img/0065.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0065.webp')"></div>
+	<div class="image-item"><img src="img/0066.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0066.webp')"></div>
+	<div class="image-item"><img src="img/0067.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0067.webp')"></div>
+	<div class="image-item"><img src="img/0068.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0068.webp')"></div>
+	<div class="image-item"><img src="img/0069.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0069.webp')"></div>
+	<div class="image-item"><img src="img/0070.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0070.webp')"></div>
+	<div class="image-item"><img src="img/0071.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0071.webp')"></div>
+	<div class="image-item"><img src="img/0072.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0072.webp')"></div>
+	<div class="image-item"><img src="img/0073.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0073.webp')"></div>
+	<div class="image-item"><img src="img/0074.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0074.webp')"></div>
+	<div class="image-item"><img src="img/0075.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0075.webp')"></div>
+	<div class="image-item"><img src="img/0076.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0076.webp')"></div>
+	<div class="image-item"><img src="img/0077.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0077.webp')"></div>
+	<div class="image-item"><img src="img/0078.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0078.webp')"></div>
+	<div class="image-item"><img src="img/0079.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0079.webp')"></div>
+	<div class="image-item"><img src="img/0080.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0080.webp')"></div>
+<div class="image-item"><img src="img/0081.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0081.webp')"></div>
+<div class="image-item"><img src="img/0082.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0082.webp')"></div>
+<div class="image-item"><img src="img/0083.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0083.webp')"></div>
+<div class="image-item"><img src="img/0084.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0084.webp')"></div>
+<div class="image-item"><img src="img/0085.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0085.webp')"></div>
+<div class="image-item"><img src="img/0086.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0086.webp')"></div>
+<div class="image-item"><img src="img/0087.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0087.webp')"></div>
+<div class="image-item"><img src="img/0088.webp" loading="lazy" alt="好玩的图片" class="modal-thumbnail" onclick="openImagePreview('img/0088.webp')"></div>
+
   </div>
 </div>
 <div class="image-preview-modal" id="imagePreviewModal">
   <span class="close-preview" onclick="closeImagePreview()">×</span>
-  <img src="" alt="预览图片" class="preview-image" id="previewImage">
+  <div class="preview-wrap">
+    <img src="" alt="预览图片" class="preview-image" id="previewImage">
+  </div>
 </div>
-<!-- Forever全屏文字层 -->
+
+
 <div class="forever-text" id="foreverText">
   <span>Forever！</span>
 </div>
 </div>
 <script>
+let scale = 1;
+let translateX = 0;
+let translateY = 0;
+let touchStartDistance = 0;
+let isDragging = false;
+let dragStartX = 0;
+let dragStartY = 0;
+const previewImg = document.getElementById('previewImage');
+const previewModal = document.getElementById('imagePreviewModal');
 const CORRECT_SHA256 = "0823cf92b5f39aa38361895ba727bde0b60d579c4c940afdd1d147ee5e2319c3";
 const HOME_URL = "index.html";
+
 async function sha256(str){
   const enc = new TextEncoder();
   const buf = await crypto.subtle.digest("SHA-256", enc.encode(str));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
+
 const pwModal = document.getElementById("pwModal");
 const pwInput = document.getElementById("pwInput");
 const btnOk = document.getElementById("btnOk");
@@ -398,6 +453,7 @@ const foreverText = document.getElementById("foreverText");
 btnCancel.onclick = ()=>{
   location.href = HOME_URL;
 };
+
 async function doCheck(){
   const val = pwInput.value.trim();
   const hash = await sha256(val);
@@ -415,10 +471,12 @@ async function doCheck(){
     },45200);
   }
 }
+
 btnOk.onclick = doCheck;
 pwInput.addEventListener("keydown",e=>{
   if(e.key==="Enter") doCheck();
 });
+
 window.addEventListener("load",()=>{
   pwInput.focus();
 });
@@ -428,20 +486,40 @@ let isLockForever = false;
 function openImagePreview(imageSrc) {
   const previewModal = document.getElementById('imagePreviewModal');
   const previewImage = document.getElementById('previewImage');
+  // 每次打开新图片，重置缩放、位置
+  scale = 1;
+  translateX = 0;
+  translateY = 0;
   previewImage.src = imageSrc;
+
+  function doFitScreen(){
+    const imgW = previewImage.naturalWidth;
+    const imgH = previewImage.naturalHeight;
+    if(!imgW || !imgH) return;
+    const winW = previewModal.clientWidth * 0.92;
+    const winH = previewModal.clientHeight * 0.92;
+    const scaleW = winW / imgW;
+    const scaleH = winH / imgH;
+    scale = Math.min(scaleW, scaleH, 1);
+    applyTransform();
+  }
+  // 每次都监听onload，缓存图片也会触发load事件
+  previewImage.onload = doFitScreen;
+  // 图片加载失败兜底
+  previewImage.onerror = function(){
+      alert("图片加载失败："+imageSrc);
+  };
+
   previewModal.classList.add('show');
   document.body.style.overflow = 'hidden';
 
-  // 判断是否是0001.webp
   if(imageSrc === "img/0001.webp"){
     isLockForever = true;
-    // 6秒倒计时
     setTimeout(()=>{
       closeImagePreview();
-      foreverText.style.display = "flex";
-      // 展示Forever文字5秒后自动消失，可自行修改时间
+      document.getElementById('foreverText').style.display = "flex";
       setTimeout(()=>{
-        foreverText.style.display = "none";
+        document.getElementById('foreverText').style.display = "none";
       },5000);
       isLockForever = false;
     },6000);
@@ -451,11 +529,95 @@ function openImagePreview(imageSrc) {
 }
 
 function closeImagePreview() {
-  if(isLockForever) return; //锁定状态禁止关闭
-  const previewModal = document.getElementById('imagePreviewModal');
+  if(isLockForever) return;
   previewModal.classList.remove('show');
   document.body.style.overflow = 'auto';
 }
+
+function applyTransform(){
+  previewImg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+}
+
+previewModal.addEventListener('wheel',function(e){
+  if(!previewModal.classList.contains('show')) return;
+  e.preventDefault();
+  if(e.ctrlKey){
+    // ctrl+滚轮缩放
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    scale = Math.max(0.3, Math.min(scale + delta, 5));
+    applyTransform();
+  }
+},{passive:false});
+
+// 计算两指距离
+function getTouchDistance(e){
+  const dx = e.touches[0].clientX - e.touches[1].clientX;
+  const dy = e.touches[0].clientY - e.touches[1].clientY;
+  return Math.sqrt(dx*dx+dy*dy);
+}
+
+previewModal.addEventListener('touchstart',function(e){
+  if(!previewModal.classList.contains('show')) return;
+  if(e.touches.length === 2){
+    //双指捏合
+    touchStartDistance = getTouchDistance(e);
+  }else if(e.touches.length ===1){
+    //单指拖拽
+    isDragging = true;
+    dragStartX = e.touches[0].clientX - translateX;
+    dragStartY = e.touches[0].clientY - translateY;
+  }
+},{passive:true});
+
+previewModal.addEventListener('touchmove',function(e){
+  if(!previewModal.classList.contains('show')) return;
+  e.preventDefault();
+  if(e.touches.length ===2){
+    //捏合缩放
+    const dist = getTouchDistance(e);
+    const ratio = dist / touchStartDistance;
+    scale = Math.max(0.3, Math.min(scale * ratio,5));
+    touchStartDistance = dist;
+    applyTransform();
+  }else if(e.touches.length ===1 && isDragging){
+    translateX = e.touches[0].clientX - dragStartX;
+    translateY = e.touches[0].clientY - dragStartY;
+    applyTransform();
+  }
+},{passive:false});
+
+previewModal.addEventListener('touchend',function(){
+  isDragging = false;
+});
+
+//电脑鼠标拖拽
+let isMouseDrag = false;
+let mouseStartX = 0;
+let mouseStartY = 0;
+previewModal.addEventListener('mousedown', function(e){
+  if(!previewModal.classList.contains('show')) return;
+  if(e.target !== previewImg) return;
+  isMouseDrag = true;
+  mouseStartX = e.clientX - translateX;
+  mouseStartY = e.clientY - translateY;
+  previewImg.style.cursor = "grabbing";
+});
+
+document.addEventListener('mousemove', function(e){
+  if(!isMouseDrag) return;
+  translateX = e.clientX - mouseStartX;
+  translateY = e.clientY - mouseStartY;
+  applyTransform();
+});
+
+document.addEventListener('mouseup', function(){
+  if(isMouseDrag){
+    isMouseDrag = false;
+    previewImg.style.cursor = "grab";
+  }
+});
+
+previewImg.style.cursor = "grab";
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
@@ -473,5 +635,6 @@ document.getElementById('imagePreviewModal').addEventListener('click', e => {
   }
 });
 </script>
+
 </body>
 </html>
